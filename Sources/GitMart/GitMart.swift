@@ -7,10 +7,13 @@ public class GitMart {
     private static let apiKeyStoreKey = "kApiKeyStoreKey"
     
     private let apiURL = "https://api.gitmart.co/v1"
+    private let apiKeyInfoPlistkey = "GitMartAPIKey"
     
-    private var apiKey: String! {
-        didSet {
-            start()
+    private var apiKey: String {
+        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GitMartAPIKey") as? String {
+            return apiKey
+        } else {
+            fatalError("You must add to your Info.plist a key named \"GitMartAPIKey\" with a string value that is your GitMart API Key from your dashboard.")
         }
     }
     private var librariesResponse: SDKLibrariesResponse?
@@ -25,22 +28,19 @@ public class GitMart {
         NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in
             print("application entered background")
         }
-    }
-    
-    public func configure(apiKey: String) {
-        self.apiKey = apiKey
+        start()
     }
     
     private func start() {
         makeRequest()
     }
     
+    private func start(cool: Bool) {
+        
+    }
+    
     @discardableResult
     public func confirmAccessToProject(projectID: String, crashOnNo: Bool = true) -> Bool {
-        guard apiKey != nil else {
-            fatalError("You must call `GitMart.shared.configure(apiKey: \"YOUR KEY\")` first before doing anything.")
-        }
-        
         // If the request didn't finish yet
         if librariesResponse == nil {
             return true
@@ -54,6 +54,7 @@ public class GitMart {
             if crashOnNo {
                 fatalError("You are attempting to use a GitMart library that you haven't paid for: \(projectID). Please visit your GitMart account to update your billing information.")
             } else {
+                print("You are attempting to use a GitMart library that you haven't paid for: \(projectID). Please visit your GitMart account to update your billing information. Eventually, we will start blocking your access but we are allowing you to continue using it now as a courtesy.")
                 return false
             }
         }
