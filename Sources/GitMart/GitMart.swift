@@ -8,7 +8,6 @@ public class GitMart {
     
     private let apiURL = "https://api.gitmart.co/v1"
     private let apiKeyInfoPlistkey = "GitMartAPIKey"
-    
     private var apiKey: String {
         if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GitMartAPIKey") as? String {
             return apiKey
@@ -16,7 +15,10 @@ public class GitMart {
             fatalError("You must add to your Info.plist a key named \"GitMartAPIKey\" with a string value that is your GitMart API Key from your dashboard.")
         }
     }
-    private var librariesResponse: SDKLibrariesResponse?
+    private static var librariesUsedKey: String {
+        return "kLibrariesUsedKey-\(C.build())"
+    }
+    private var sdkResponse: SDKResponse?
     
     private init() {
         NotificationCenter.default.addObserver(forName: UIApplication.didFinishLaunchingNotification, object: nil, queue: .main) { _ in
@@ -35,37 +37,53 @@ public class GitMart {
         makeRequest()
     }
     
-    private func start(cool: Bool) {
-        
+    // MARK: - Library Storage
+    
+    private static func storeLibraryUsage(libraryID: String) {
+        var current = librariesUsed()
+        current.insert(libraryID)
+        UserDefaults.standard.set(Array(current), forKey: GitMart.librariesUsedKey)
     }
     
+    private static func librariesUsed() -> Set<String> {
+        let libraryIDs: [String] = UserDefaults.standard.stringArray(forKey: GitMart.librariesUsedKey) ?? []
+        return Set(libraryIDs)
+    }
+    
+    // MARK: - Confirm Access
+    
     @discardableResult
-    public func confirmAccessToProject(projectID: String, crashOnNo: Bool = true) -> Bool {
+    public func confirmAccessToProject(libraryID: String, name: String, crashOnNo: Bool = true) -> Bool {
         // If the request didn't finish yet
-        if librariesResponse == nil {
+        GitMart.storeLibraryUsage(libraryID: libraryID)
+        
+        if sdkResponse == nil {
             return true
         }
         
-        guard let libraries = librariesResponse?.libraries else {
+        guard let granted = sdkResponse?.data?.libraries?.granted, let billingError = sdkResponse?.data?.libraries?.billingErrors else {
             return true
         }
         
-        guard libraries.contains(where: { $0._id == projectID }) else {
+        if billingError.contains(where: { $0.id == libraryID }) {
+            print("Warning - you are currently in billing error with the library \(name)<\(libraryID)>. Please visit your GitMart dashboard to resolve this error and ensure there is no interruption in service. We are still permitting access currently.")
+            return true
+        }
+        
+        guard granted.contains(where: { $0.id == libraryID }) else {
             if crashOnNo {
-                fatalError("You are attempting to use a GitMart library that you haven't paid for: \(projectID). Please visit your GitMart account to update your billing information.")
+                fatalError("You are attempting to use a GitMart library that you haven't paid for: \(name)<\(libraryID)>. Please visit your GitMart account to update your billing information.")
             } else {
-                print("You are attempting to use a GitMart library that you haven't paid for: \(projectID). Please visit your GitMart account to update your billing information. Eventually, we will start blocking your access but we are allowing you to continue using it now as a courtesy.")
+                print("You are attempting to use a GitMart library that you haven't paid for: \(name)<\(libraryID)>. Please visit your GitMart account to update your billing information. Eventually, we will start blocking your access but we are allowing you to continue using it now as a courtesy.")
                 return false
             }
         }
-        
-        // store the projectID locally
-        
+                
         return true
     }
     
-    public func crash(projectID: String) {
-        fatalError("You are attempting to use a GitMart library that you haven't paid for: \(projectID). Please visit your GitMart account to update your billing information.")
+    public func crash(libraryID: String) {
+        fatalError("You are attempting to use a GitMart library that you haven't paid for: \(libraryID). Please visit your GitMart account to update your billing information.")
     }
     
     deinit {
@@ -80,17 +98,29 @@ public class GitMart {
             "x-app-version": C.bundleVersion(),
             "x-country": C.currentLocale().countryCode ?? "",
             "x-bundle-id": Bundle.main.bundleIdentifier ?? "Unknown",
-            "x-api-key": apiKey
+            "x-api-key": apiKey,
+            "x-app-user-id": C.UserID(),
         ]
         
         do {
             var urlRequest = URLRequest(url: url)
             urlRequest.allHTTPHeaderFields = headers
-            urlRequest.httpMethod = "GET"
-            /*
-             let jsonBody = try JSONSerialization.data(withJSONObject: body)
-             urlRequest.httpBody = jsonBody
-            */
+            urlRequest.httpMethod = "POST"
+            
+            let body: [String: Any] = [
+                "ios_build_number": C.build(),
+                "ios_build_version": C.bundleVersion(),
+                "ios_app_country": C.currentLocale().countryCode ?? "",
+                "ios_app_timezone": C.Timezone_Name(),
+                "ios_bundle_id": Bundle.main.bundleIdentifier ?? "Unknown",
+                "ios_version": UIDevice.current.systemVersion,
+                "ios_app_user_id": C.UserID(),
+                "library_ids": Array(GitMart.librariesUsed())
+            ]
+            
+            let jsonBody = try JSONSerialization.data(withJSONObject: body)
+            urlRequest.httpBody = jsonBody
+            
             URLSession.shared.dataTask(with: urlRequest) { (data, urlResponse, error) in
                 guard error == nil else {
                     return
@@ -110,9 +140,13 @@ public class GitMart {
                         let dateStr = try container.decode(String.self)
                         return dateFormatter.date(from: dateStr)!
                     })
-                    let res = try decoder.decode(SDKLibrariesResponse.self, from: data)
-                    self.librariesResponse = res
-                    print(res)
+                    let res = try decoder.decode(SDKResponse.self, from: data)
+                    
+                    self.sdkResponse = res
+                    
+                    if let error = res.error {
+                        print("GitMartError: \(error.type) (\(error.code)) - \(error.message)")
+                    }
                 } catch let err {
                     print(err)
                 }
@@ -124,36 +158,64 @@ public class GitMart {
     }
 }
 
+
+struct SDKResponse: Codable {
+    let data: SDKLibrariesResponse?
+    let error: SDKError?
+}
+
 struct SDKLibrariesResponse: Codable {
-    let libraries: [SDKLibrary]
-    let user: SDKUser
+    let libraries: SDKLibraryResponse?
+    let error: SDKError?
+}
+
+struct SDKLibraryResponse: Codable {
+    let granted: [SDKLibrary]
+    let billingErrors: [SDKLibrary]
     
     private enum CodingKeys: String, CodingKey {
-        case libraries = "data"
-        case user
+        case granted = "granted"
+        case billingErrors = "billing_errors"
     }
 }
 
-struct SDKLibrary: Codable {
-    let _id: String
-    let name: String
-    let creator: String
-    let description: String
-    let gitURL: URL
-    let price: Double
-    let isReviewed: Bool
-    let createdAt: Date
-    let updatedAt: Date
-    let __v: Int
+struct SDKError: Codable {
+    let type: String
+    let code: Int
+    let message: [String]
 }
 
-struct SDKUser: Codable {
-    let _id: String
+struct SDKLibrary: Codable {
+    let id: String
     let name: String
-    let profilePhotoURL: URL?
-    let firebaseID: String
-    let email: String
-    let createdAt: Date
-    let updatedAt: Date
-    let __v: Int
+    let isPurchased: Bool
+    let isTrial: Bool
+    let usageLeft: Int
+    
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case name = "name"
+        case isPurchased = "is_purchased"
+        case isTrial = "is_trial"
+        case usageLeft = "usage_left"
+    }
 }
+
+//{
+//  "data": {
+//    "libraries": {
+//      "granted": [
+//        {
+//          "id": "632b6c551015bcf8ac4843d9",
+//          "name": "ChatKit",
+//          "price": 50.99,
+//          "is_purchased": true,
+//          "is_trial": false,
+//          "usage_left": 1000
+//        }
+//      ],
+//      "billing_errors": []
+//    }
+//  },
+//  "error": null
+//}

@@ -8,6 +8,10 @@
 import Foundation
 
 internal struct C {
+    struct Setting {
+        static let userID = "kGitMartUserID"
+    }
+    
     static let bundleVersion: () -> String = {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
         return version
@@ -32,5 +36,23 @@ internal struct C {
 
     static let defaultLocale: () -> (NSLocale) = {
         return NSLocale(localeIdentifier: "en_US")
+    }
+    
+    static let setUserID: (String) -> () = { newUserID in
+        UserDefaults.standard.setValue(newUserID, forKey: Setting.userID)
+    }
+    
+    static let clearUserID: () -> () = {
+        UserDefaults.standard.removeObject(forKey: Setting.userID)
+    }
+    
+    static let UserID: () -> (String) = {
+        if let userID = UserDefaults.standard.string(forKey: Setting.userID) {
+            return userID
+        }
+        
+        let newUserID = UUID().uuidString
+        setUserID(newUserID)
+        return newUserID
     }
 }
