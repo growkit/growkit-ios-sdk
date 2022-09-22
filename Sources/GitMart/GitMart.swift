@@ -22,19 +22,20 @@ public class GitMart {
     
     private init() {
         NotificationCenter.default.addObserver(forName: UIApplication.didFinishLaunchingNotification, object: nil, queue: .main) { _ in
-            print("application opened")
+            // self?.makeEventRequest(eventName: "Application Opened", parameters: [:])
         }
         NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
-            print("application became active")
+            // self?.makeEventRequest(eventName: "Application Became Active", parameters: [:])
         }
         NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in
-            print("application entered background")
+            // self?.makeEventRequest(eventName: "Application Entered Background", parameters: [:])
         }
-        start()
+        GMLogger.shared.logLevel = .minimal
+        makeLibraryRequest()
     }
     
-    private func start() {
-        makeRequest()
+    public func start() {
+        
     }
     
     // MARK: - Library Storage
@@ -66,7 +67,7 @@ public class GitMart {
         }
         
         if billingError.contains(where: { $0.id == libraryID }) {
-            print("Warning - you are currently in billing error with the library \(name)<\(libraryID)>. Please visit your GitMart dashboard to resolve this error and ensure there is no interruption in service. We are still permitting access currently.")
+            GMLogger.shared.log(.GitMart, "Warning - you are currently in billing error with the library \(name)<\(libraryID)>. Please visit your GitMart dashboard to resolve this error and ensure there is no interruption in service. We are still permitting access currently.", logLevel: .minimal)
             return true
         }
         
@@ -74,14 +75,14 @@ public class GitMart {
             if crashOnNo {
                 fatalError("You are attempting to use a GitMart library that you haven't paid for: \(name)<\(libraryID)>. Please visit your GitMart account to update your billing information.")
             } else {
-                print("You are attempting to use a GitMart library that you haven't paid for: \(name)<\(libraryID)>. Please visit your GitMart account to update your billing information. Eventually, we will start blocking your access but we are allowing you to continue using it now as a courtesy.")
+                GMLogger.shared.log(.GitMart, "You are attempting to use a GitMart library that you haven't paid for: \(name)<\(libraryID)>. Please visit your GitMart account to update your billing information. Eventually, we will start blocking your access but we are allowing you to continue using it now as a courtesy.", logLevel: .minimal)
                 return false
             }
         }
         
         if let grantedLibrary = granted.filter({ $0.id == libraryID }).first {
             if grantedLibrary.isTrial {
-                print("You are using \(name)<\(libraryID)> in trial mode right now. You can use it \(grantedLibrary.usageLeft) more times before your access will be expired. Please purchase this library on GitMart at https://gitmart.co/library/\(libraryID) to continue using it. Shipping a library in trial mode to production is against our Terms of Service and the license for an individual library and can result in legal action.")
+                GMLogger.shared.log(.GitMart, "You are using \(name)<\(libraryID)> in trial mode right now. You can use it \(grantedLibrary.usageLeft) more times before your access will be expired. Please purchase this library on GitMart at https://gitmart.co/library/\(libraryID) to continue using it. Shipping a library in trial mode to production is against our Terms of Service and the license for an individual library and can result in legal action.", logLevel: .minimal)
             }
         }
         
@@ -97,75 +98,55 @@ public class GitMart {
         NotificationCenter.default.removeObserver(self)
     }
     
-    private func makeRequest() {
-        let url = URL(string: "\(apiURL)/sdk/libraries")!
-        let headers: [String: String] = [
-            "Content-Type": "application/json",
-            "x-build-number": C.build(),
-            "x-app-version": C.bundleVersion(),
-            "x-country": C.currentLocale().countryCode ?? "",
-            "x-bundle-id": Bundle.main.bundleIdentifier ?? "Unknown",
-            "x-api-key": apiKey,
-            "x-app-user-id": C.UserID(),
+    private func makeLibraryRequest() {
+        let request: GMRequest<SDKResponse> = GMRequest(endpoint: "/sdk/libraries", httpMethod: "POST")
+        request.body = [
+            "metadata": [
+                "ios_build_number": C.build(),
+                "ios_build_version": C.bundleVersion(),
+                "ios_app_country": C.currentLocale().countryCode ?? "",
+                "ios_app_timezone": C.Timezone_Name(),
+                "ios_bundle_id": Bundle.main.bundleIdentifier ?? "Unknown",
+                "ios_version": UIDevice.current.systemVersion,
+                "ios_app_user_id": C.UserID(),
+            ],
+            "library_ids": Array(GitMart.librariesUsed())
         ]
-        
-        do {
-            var urlRequest = URLRequest(url: url)
-            urlRequest.allHTTPHeaderFields = headers
-            urlRequest.httpMethod = "POST"
-            
-            let body: [String: Any] = [
-                "metadata": [
-                    "ios_build_number": C.build(),
-                    "ios_build_version": C.bundleVersion(),
-                    "ios_app_country": C.currentLocale().countryCode ?? "",
-                    "ios_app_timezone": C.Timezone_Name(),
-                    "ios_bundle_id": Bundle.main.bundleIdentifier ?? "Unknown",
-                    "ios_version": UIDevice.current.systemVersion,
-                    "ios_app_user_id": C.UserID(),
-                ],
-                "library_ids": Array(GitMart.librariesUsed())
-            ]
-            
-            let jsonBody = try JSONSerialization.data(withJSONObject: body)
-            urlRequest.httpBody = jsonBody
-            
-            URLSession.shared.dataTask(with: urlRequest) { (data, urlResponse, error) in
-                guard error == nil else {
-                    return
-                }
-                
-                guard let data = data else {
-                    print("no data")
-                    return
-                }
-                
-                do {
-                    let decoder = JSONDecoder()
-                    let dateFormatter = ISO8601DateFormatter()
-                    dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                    decoder.dateDecodingStrategy = .custom({ decoder in
-                        let container = try decoder.singleValueContainer()
-                        let dateStr = try container.decode(String.self)
-                        return dateFormatter.date(from: dateStr)!
-                    })
-                    let res = try decoder.decode(SDKResponse.self, from: data)
-                    
-                    self.sdkResponse = res
-                    
-                    if let error = res.error {
-                        print("GitMartError: \(error.type) (\(error.code)) - \(error.message)")
-                    }
-                } catch let err {
-                    print(err)
-                }
-                
-            }.resume()
-        } catch let err {
+        request.onResponse = { [weak self] (res: SDKResponse) in
+            self?.sdkResponse = res
+        }
+        request.onError = { err in
             print(err)
         }
+        request.start()
+    }
+    
+    private func makeEventRequest(eventName: String, parameters: [String: Any]) {
+        let request: GMRequest<SDKResponse> = GMRequest(endpoint: "/sdk/events", httpMethod: "POST")
+        request.body = [
+            "metadata": [
+                "ios_build_number": C.build(),
+                "ios_build_version": C.bundleVersion(),
+                "ios_app_country": C.currentLocale().countryCode ?? "",
+                "ios_app_timezone": C.Timezone_Name(),
+                "ios_bundle_id": Bundle.main.bundleIdentifier ?? "Unknown",
+                "ios_version": UIDevice.current.systemVersion,
+                "ios_app_user_id": C.UserID(),
+            ],
+            "event": eventName,
+            "parameters": parameters
+        ]
+        request.onResponse = { /*[weak self]*/ (res: SDKResponse) in
+            
+        }
+        request.onError = { err in
+            print(err)
+        }
+        request.start()
     }
 }
+
+
 
 
 struct SDKResponse: Codable {

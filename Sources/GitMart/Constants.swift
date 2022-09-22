@@ -55,4 +55,12 @@ internal struct C {
         setUserID(newUserID)
         return newUserID
     }
+    
+    static let APIKey: () -> (String) = {
+        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GitMartAPIKey") as? String {
+            return apiKey
+        } else {
+            fatalError("You must add to your Info.plist a key named \"GitMartAPIKey\" with a string value that is your GitMart API Key from your dashboard.")
+        }
+    }
 }
