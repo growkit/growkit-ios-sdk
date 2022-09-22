@@ -53,7 +53,7 @@ public class GitMart {
     // MARK: - Confirm Access
     
     @discardableResult
-    public func confirmAccessToProject(libraryID: String, name: String, crashOnNo: Bool = true) -> Bool {
+    public func confirmAccessToProject(libraryID: String, name: String, crashOnNo: Bool = false) -> Bool {
         // If the request didn't finish yet
         GitMart.storeLibraryUsage(libraryID: libraryID)
         
@@ -78,6 +78,13 @@ public class GitMart {
                 return false
             }
         }
+        
+        if let grantedLibrary = granted.filter({ $0.id == libraryID }).first {
+            if grantedLibrary.isTrial {
+                print("You are using \(name)<\(libraryID)> in trial mode right now. You can use it \(grantedLibrary.usageLeft) more times before your access will be expired. Please purchase this library on GitMart at https://gitmart.co/library/\(libraryID) to continue using it. Shipping a library in trial mode to production is against our Terms of Service and the license for an individual library and can result in legal action.")
+            }
+        }
+        
                 
         return true
     }
@@ -108,13 +115,15 @@ public class GitMart {
             urlRequest.httpMethod = "POST"
             
             let body: [String: Any] = [
-                "ios_build_number": C.build(),
-                "ios_build_version": C.bundleVersion(),
-                "ios_app_country": C.currentLocale().countryCode ?? "",
-                "ios_app_timezone": C.Timezone_Name(),
-                "ios_bundle_id": Bundle.main.bundleIdentifier ?? "Unknown",
-                "ios_version": UIDevice.current.systemVersion,
-                "ios_app_user_id": C.UserID(),
+                "metadata": [
+                    "ios_build_number": C.build(),
+                    "ios_build_version": C.bundleVersion(),
+                    "ios_app_country": C.currentLocale().countryCode ?? "",
+                    "ios_app_timezone": C.Timezone_Name(),
+                    "ios_bundle_id": Bundle.main.bundleIdentifier ?? "Unknown",
+                    "ios_version": UIDevice.current.systemVersion,
+                    "ios_app_user_id": C.UserID(),
+                ],
                 "library_ids": Array(GitMart.librariesUsed())
             ]
             
@@ -200,22 +209,3 @@ struct SDKLibrary: Codable {
         case usageLeft = "usage_left"
     }
 }
-
-//{
-//  "data": {
-//    "libraries": {
-//      "granted": [
-//        {
-//          "id": "632b6c551015bcf8ac4843d9",
-//          "name": "ChatKit",
-//          "price": 50.99,
-//          "is_purchased": true,
-//          "is_trial": false,
-//          "usage_left": 1000
-//        }
-//      ],
-//      "billing_errors": []
-//    }
-//  },
-//  "error": null
-//}
