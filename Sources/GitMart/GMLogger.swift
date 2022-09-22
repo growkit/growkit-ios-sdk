@@ -30,8 +30,7 @@ public class GMLogger {
     func logRequest<T: Codable>(_ gmRequest: GMRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
         var logObject = gmRequest.logObject
         
-        if let data = data {
-            let data = try! JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String: Any]
+        if let data = data, let data = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {
             logObject["response"] = data
         }
         
@@ -43,7 +42,10 @@ public class GMLogger {
             logObject["error"] = error.localizedDescription
         }
         
-        let prettyRequest = String(data: try! JSONSerialization.data(withJSONObject: logObject, options: .prettyPrinted), encoding: .utf8)!
-        log(.request, "\(prettyRequest)", logLevel: .everything)
+        if let jsonData = try? JSONSerialization.data(withJSONObject: logObject, options: .prettyPrinted) {
+            if let prettyRequest = String(data: jsonData, encoding: .utf8) {
+                log(.request, "\(prettyRequest)", logLevel: .everything)
+            }
+        }
     }
 }

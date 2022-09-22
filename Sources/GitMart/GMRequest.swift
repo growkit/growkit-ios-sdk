@@ -65,7 +65,7 @@ class GMRequest<T: Codable> {
                     decoder.dateDecodingStrategy = .custom({ decoder in
                         let container = try decoder.singleValueContainer()
                         let dateStr = try container.decode(String.self)
-                        return dateFormatter.date(from: dateStr)!
+                        return dateFormatter.date(from: dateStr) ?? Date()
                     })
                     let res = try decoder.decode(T.self, from: data)
                     self.onResponse?(res)

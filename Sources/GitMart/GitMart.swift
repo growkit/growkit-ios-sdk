@@ -4,17 +4,7 @@ public class GitMart {
     
     public static let shared: GitMart = GitMart()
     
-    private static let apiKeyStoreKey = "kApiKeyStoreKey"
-    
-    private let apiURL = "https://api.gitmart.co/v1"
-    private let apiKeyInfoPlistkey = "GitMartAPIKey"
-    private var apiKey: String {
-        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GitMartAPIKey") as? String {
-            return apiKey
-        } else {
-            fatalError("You must add to your Info.plist a key named \"GitMartAPIKey\" with a string value that is your GitMart API Key from your dashboard.")
-        }
-    }
+    // Build added so that cached libraries are reset on every new build (if a user decided to remove libraries)
     private static var librariesUsedKey: String {
         return "kLibrariesUsedKey-\(C.build())"
     }
@@ -145,9 +135,6 @@ public class GitMart {
         request.start()
     }
 }
-
-
-
 
 struct SDKResponse: Codable {
     let data: SDKLibrariesResponse?
