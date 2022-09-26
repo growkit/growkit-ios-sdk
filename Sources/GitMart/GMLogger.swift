@@ -22,9 +22,7 @@ public class GMLogger {
     var logLevel: LogLevel = .everything
     
     func log(_ category: Category, _ log: String, logLevel: LogLevel) {
-        if logLevel == self.logLevel {
-            print("<\(category.rawValue)> \(log)")
-        }
+        print("<\(category.rawValue)> \(log)")
     }
     
     func logRequest<T: Codable>(_ gmRequest: GMRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
