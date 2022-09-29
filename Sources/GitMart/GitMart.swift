@@ -52,6 +52,10 @@ public class GitMart {
     
     @discardableResult
     public func confirmAccessToProject(library: GitMartLibrary.Type, crashOnNo: Bool = false) -> Bool {
+        guard libraries.contains(where: { $0["id"] as? String ?? "" == library.id }) else {
+            fatalError("You are using a library (\(library.name) - \(library.id))) that you did not configure on app open. Please update your configure to include `\(library.self).self` in your GitMart.configure() call like so: `GitMart.configure([ChatKit.self])`.")
+        }
+        
         if sdkResponse == nil {
             return true
         }
