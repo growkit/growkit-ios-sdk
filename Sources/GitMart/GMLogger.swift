@@ -8,21 +8,29 @@
 import Foundation
 
 public class GMLogger {
-    static let shared: GMLogger = GMLogger()
+    public static let shared: GMLogger = GMLogger()
     
-    enum LogLevel {
-        case minimal, everything
-    }
-    
-    enum Category: String {
+    public enum Category {
         case request
-        case GitMart
+        case gitMart
+        case module(GitMartLibrary.Type)
+        
+        var title: String {
+            switch self {
+            case .request:
+                return "Request"
+            case .gitMart:
+                return "GitMart"
+            case .module(let type):
+                return type.name
+            }
+        }
     }
     
-    var logLevel: LogLevel = .everything
+    public var enabledCategories: [Category] = [.gitMart, .request]
     
-    func log(_ category: Category, _ log: String, logLevel: LogLevel) {
-        print("<\(category.rawValue)> \(log)")
+    public func log(_ category: Category, _ log: String) {
+        print("<\(category.title)> \(log)")
     }
     
     func logRequest<T: Codable>(_ gmRequest: GMRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
@@ -42,7 +50,7 @@ public class GMLogger {
         
         if let jsonData = try? JSONSerialization.data(withJSONObject: logObject, options: .prettyPrinted) {
             if let prettyRequest = String(data: jsonData, encoding: .utf8) {
-                log(.request, "\(prettyRequest)", logLevel: .everything)
+                log(.request, "\(prettyRequest)")
             }
         }
     }
