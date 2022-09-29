@@ -10,5 +10,6 @@ import Foundation
 public protocol GitMartLibrary {
     static var id: String { get }
     static var name: String { get }
+    static var version: String { get }
     static func start()
 }
