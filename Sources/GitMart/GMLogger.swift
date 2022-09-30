@@ -27,9 +27,10 @@ public class GMLogger {
         }
     }
     
-    public var enabledCategories: [Category] = [.gitMart, .request]
+    public var enabledCategories: [Category] = [.gitMart,]
     
     public func log(_ category: Category, _ log: String) {
+        guard enabledCategories.contains(where: { $0.title == category.title }) else { return }
         print("<\(category.title)> \(log)")
     }
     

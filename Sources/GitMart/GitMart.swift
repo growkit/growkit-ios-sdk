@@ -35,12 +35,11 @@ public class GitMart {
     
     public static func configure(_ libraries: [GitMartLibrary.Type]) {
         _shared.libraries = libraries.map({ ["id": $0.id, "version": $0.version] })
+        _shared.didCallConfigure = true
         libraries.forEach({ $0.start() })
+        GitMart.shared.start()
         
         GMLogger.shared.log(.gitMart, "LIBRARIES: \(libraries.map({ $0.id }))")
-        GitMart._shared.didCallConfigure = true
-        
-        GitMart.shared.start()
     }
     
     public func start() {
@@ -83,7 +82,6 @@ public class GitMart {
                 GMLogger.shared.log(.gitMart, "You are using \(library.name)<\(library.id)> in trial mode right now. You can use it \(grantedLibrary.usageLeft) more times before your access will be expired. Please purchase this library on GitMart at https://gitmart.co/library/\(library.id) to continue using it. Shipping a library in trial mode to production is against our Terms of Service and the license for an individual library and can result in legal action.")
             }
         }
-        
         
         return true
     }
@@ -133,7 +131,7 @@ public class GitMart {
             self.sdkResponse = res
         }
         request.onError = { err in
-            print(err)
+            GMLogger.shared.log(.request, "err: \(err.localizedDescription)")
         }
         request.start()
         self.sdkRequest = request
@@ -158,7 +156,7 @@ public class GitMart {
             
         }
         request.onError = { err in
-            print(err)
+            GMLogger.shared.log(.request, "err: \(err.localizedDescription)")
         }
         request.start()
     }
@@ -181,51 +179,16 @@ public class GitMart {
                 let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any]
                 self.json = json
             } catch let err {
-                print(err)
+                GMLogger.shared.log(.request, "err: \(err.localizedDescription)")
             }
         }
         task.resume()
     }
-}
-
-struct SDKResponse: Codable {
-    let data: SDKLibrariesResponse?
-    let error: SDKError?
-}
-
-struct SDKLibrariesResponse: Codable {
-    let libraries: SDKLibraryResponse?
-    let error: SDKError?
-}
-
-struct SDKLibraryResponse: Codable {
-    let granted: [SDKLibrary]
-    let billingErrors: [SDKLibrary]
     
-    private enum CodingKeys: String, CodingKey {
-        case granted = "granted"
-        case billingErrors = "billing_errors"
-    }
-}
-
-struct SDKError: Codable {
-    let type: String
-    let code: Int
-    let message: [String]
-}
-
-struct SDKLibrary: Codable {
-    let id: String
-    let name: String
-    let isPurchased: Bool
-    let isTrial: Bool
-    let usageLeft: Int
     
-    private enum CodingKeys: String, CodingKey {
-        case id = "id"
-        case name = "name"
-        case isPurchased = "is_purchased"
-        case isTrial = "is_trial"
-        case usageLeft = "usage_left"
-    }
 }
+
+
+
+
+
