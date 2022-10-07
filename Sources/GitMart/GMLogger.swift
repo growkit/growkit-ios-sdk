@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  GMLogger.swift
 //  
 //
 //  Created by Zachary Shakked on 9/22/22.
@@ -8,26 +8,33 @@
 import Foundation
 
 public class GMLogger {
-    static let shared: GMLogger = GMLogger()
+    public static let shared: GMLogger = GMLogger()
     
-    enum LogLevel {
-        case minimal, everything
-    }
-    
-    enum Category: String {
+    public enum Category {
         case request
-        case GitMart
-    }
-    
-    var logLevel: LogLevel = .everything
-    
-    func log(_ category: Category, _ log: String, logLevel: LogLevel) {
-        if logLevel == self.logLevel {
-            print("<\(category.rawValue)> \(log)")
+        case gitMart
+        case module(GitMartLibrary.Type)
+        
+        var title: String {
+            switch self {
+            case .request:
+                return "Request"
+            case .gitMart:
+                return "GitMart"
+            case .module(let type):
+                return type.name
+            }
         }
     }
     
-    func logRequest<T: Codable>(_ gmRequest: GMRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
+    public var enabledCategories: [Category] = [.gitMart]
+    
+    public func log(_ category: Category, _ log: String) {
+        guard enabledCategories.contains(where: { $0.title == category.title }) else { return }
+        print("<\(category.title)> \(log)")
+    }
+    
+    func logRequest<T: JSONObject>(_ gmRequest: GMRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
         var logObject = gmRequest.logObject
         
         if let data = data, let data = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {
@@ -44,7 +51,7 @@ public class GMLogger {
         
         if let jsonData = try? JSONSerialization.data(withJSONObject: logObject, options: .prettyPrinted) {
             if let prettyRequest = String(data: jsonData, encoding: .utf8) {
-                log(.request, "\(prettyRequest)", logLevel: .everything)
+                log(.request, "\(prettyRequest)")
             }
         }
     }
