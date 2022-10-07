@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  GMRequest.swift
 //  
 //
 //  Created by Zachary Shakked on 9/22/22.
@@ -7,8 +7,8 @@
 
 import UIKit
 
-class GMRequest<T: Codable> {
-    private let apiURL = "https://api.gitmart.co/v1"
+class GMRequest<T: JSONObject> {
+    private let apiURL = "https://api.gitmart.co/v2"
     
     let endpoint: String
     let httpMethod: String
@@ -67,8 +67,10 @@ class GMRequest<T: Codable> {
                         let dateStr = try container.decode(String.self)
                         return dateFormatter.date(from: dateStr) ?? Date()
                     })
-                    let res = try decoder.decode(T.self, from: data)
-                    self.onResponse?(res)
+                    let jsonObject = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] ?? [:]
+                    let json = JSON(jsonObject)
+                    let t = T(json: json)
+                    self.onResponse?(t)
                 } catch let err {
                     self.onError?(err)
                 }

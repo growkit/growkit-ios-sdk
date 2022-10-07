@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  GMLogger.swift
 //  
 //
 //  Created by Zachary Shakked on 9/22/22.
@@ -27,14 +27,14 @@ public class GMLogger {
         }
     }
     
-    public var enabledCategories: [Category] = [.gitMart,]
+    public var enabledCategories: [Category] = [.gitMart]
     
     public func log(_ category: Category, _ log: String) {
         guard enabledCategories.contains(where: { $0.title == category.title }) else { return }
         print("<\(category.title)> \(log)")
     }
     
-    func logRequest<T: Codable>(_ gmRequest: GMRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
+    func logRequest<T: JSONObject>(_ gmRequest: GMRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
         var logObject = gmRequest.logObject
         
         if let data = data, let data = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {

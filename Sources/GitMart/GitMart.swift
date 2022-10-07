@@ -1,4 +1,26 @@
 import UIKit
+import SafariServices
+import StoreKit
+
+public protocol GitMartDelegate: AnyObject {
+    func logAnalyticEvent(library: GitMartLibrary.Type, event: String, parameters: [String: Any]?)
+    func handleAction(library: GitMartLibrary.Type, action: GitMartAction, controller: UIViewController?)
+}
+
+public enum GitMartAction {
+    case purchaseProduct(String)
+    case restorePurchases
+    case openURL(URL, Bool)
+    case requestRating
+    case requestWrittenReview
+    case contactSupport
+    
+    case other(String)
+}
+
+public enum GitMartPermission {
+    case pushNotifications
+}
 
 public class GitMart {
     
@@ -9,17 +31,20 @@ public class GitMart {
         }
         return _shared
     }
+    public weak var delegate: GitMartDelegate?
+    
     private static let _shared: GitMart = GitMart()
-    public static let triggerNotification: Notification.Name =  Notification.Name(rawValue: "kGitMartTriggerNotification")
     
     // Build added so that cached libraries are reset on every new build (if a user decided to remove libraries)
  
-    private let jsonURLString = "https://gitmartco.nyc3.cdn.digitaloceanspaces.com/gitmart.json"
     private var sdkResponse: SDKResponse?
     private var sdkRequest: GMRequest<SDKResponse>?
     private var json: [String: Any]?
     private var didCallConfigure: Bool = false
-    private var libraries: [[String: Codable]] = []
+    private var libraries: [GitMartLibrary.Type] = []
+    public var appID: String {
+        return ""
+    }
     
     private init() {
         NotificationCenter.default.addObserver(forName: UIApplication.didFinishLaunchingNotification, object: nil, queue: .main) { _ in
@@ -34,7 +59,7 @@ public class GitMart {
     }
     
     public static func configure(_ libraries: [GitMartLibrary.Type]) {
-        _shared.libraries = libraries.map({ ["id": $0.id, "version": $0.version] })
+        _shared.libraries = libraries
         _shared.didCallConfigure = true
         libraries.forEach({ $0.start() })
         GitMart.shared.start()
@@ -44,14 +69,13 @@ public class GitMart {
     
     public func start() {
         makeLibraryRequest()
-        makeJSONRequest()
     }
     
     // MARK: - Confirm Access
     
     @discardableResult
     public func confirmAccessToProject(library: GitMartLibrary.Type, crashOnNo: Bool = false) -> Bool {
-        guard libraries.contains(where: { $0["id"] as? String ?? "" == library.id }) else {
+        guard libraries.contains(where: { $0.id == library.id }) else {
             fatalError("You are using a library (\(library.name) - \(library.id))) that you did not configure on app open. Please update your configure to include `\(library.self).self` in your GitMart.configure() call like so: `GitMart.configure([ChatKit.self])`.")
         }
         
@@ -59,27 +83,26 @@ public class GitMart {
             return true
         }
         
-        guard let granted = sdkResponse?.data?.libraries?.granted, let billingError = sdkResponse?.data?.libraries?.billingErrors else {
+        guard let library = sdkResponse?.libraries.filter({ $0.id == library.id }).first else {
             return true
         }
         
-        if billingError.contains(where: { $0.id == library.id }) {
+        if library.isBillingError {
             GMLogger.shared.log(.gitMart, "Warning - you are currently in billing error with the library \(library.name)<\(library.id)>. Please visit your GitMart dashboard to resolve this error and ensure there is no interruption in service. We are still permitting access currently.")
             return true
         }
         
-        guard granted.contains(where: { $0.id == library.id }) else {
+        
+        if library.isTrial {
+            GMLogger.shared.log(.gitMart, "You are using \(library.name)<\(library.id)> in trial mode right now. You can use it \(library.usageLeft) more times before your access will be expired. Please purchase this library on GitMart at https://gitmart.co/library/\(library.id) to continue using it. Shipping a library in trial mode to production is against our Terms of Service and the license for an individual library and can result in legal action.")
+        }
+        
+        guard library.isPurchased else {
             if crashOnNo {
                 fatalError("You are attempting to use a GitMart library that you haven't paid for: \(library.name)<\(library.id)>. Please visit your GitMart account to update your billing information.")
             } else {
                 GMLogger.shared.log(.gitMart, "You are attempting to use a GitMart library that you haven't paid for: \(library.name)<\(library.id)>. Please visit your GitMart account to update your billing information. Eventually, we will start blocking your access but we are allowing you to continue using it now as a courtesy.")
                 return false
-            }
-        }
-        
-        if let grantedLibrary = granted.filter({ $0.id == library.id }).first {
-            if grantedLibrary.isTrial {
-                GMLogger.shared.log(.gitMart, "You are using \(library.name)<\(library.id)> in trial mode right now. You can use it \(grantedLibrary.usageLeft) more times before your access will be expired. Please purchase this library on GitMart at https://gitmart.co/library/\(library.id) to continue using it. Shipping a library in trial mode to production is against our Terms of Service and the license for an individual library and can result in legal action.")
             }
         }
         
@@ -94,9 +117,10 @@ public class GitMart {
     
     // MARK: - Triggers
     
-    public func trigger(name: String) {
-        let notification = Notification(name: GitMart.triggerNotification, object: name)
-        NotificationCenter.default.post(notification)
+    public func logEvent(eventName: String, properties: [String: Any]) {
+        libraries.forEach({
+            $0.handleEvent(eventName: eventName, properties: properties)
+        })
     }
     
     // MARK: - JSON
@@ -125,10 +149,15 @@ public class GitMart {
                 "ios_app_user_id": C.UserID(),
                 "ios_sdk_version": GitMart.version,
             ],
-            "libraries": libraries,
+            "libraries": libraries.map({ ["id": $0.id, "version": $0.version, "bundle_id": $0.bundleID] }),
         ]
         request.onResponse = { (res: SDKResponse) in
             self.sdkResponse = res
+            self.libraries.forEach({ library in
+                if let libraryJSON = res.configs.filter({ $0.libraryID == library.id }).first {
+                    library.jsonLoaded(dictionary: libraryJSON.json)
+                }
+            })
         }
         request.onError = { err in
             GMLogger.shared.log(.request, "err: \(err.localizedDescription)")
@@ -160,31 +189,6 @@ public class GitMart {
         }
         request.start()
     }
-    
-    private func makeJSONRequest() {
-        let url = URL(string: jsonURLString)!
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "GET"
-        urlRequest.cachePolicy = .reloadIgnoringLocalCacheData
-        let task = URLSession.shared.dataTask(with: urlRequest) { data, urlResponse, error in
-            guard error == nil else {
-                return
-            }
-            
-            guard let data = data else {
-                return
-            }
-            
-            do {
-                let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any]
-                self.json = json
-            } catch let err {
-                GMLogger.shared.log(.request, "err: \(err.localizedDescription)")
-            }
-        }
-        task.resume()
-    }
-    
     
 }
 
