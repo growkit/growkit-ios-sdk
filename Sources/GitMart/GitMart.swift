@@ -42,9 +42,7 @@ public class GitMart {
     private var json: [String: Any]?
     private var didCallConfigure: Bool = false
     private var libraries: [GitMartLibrary.Type] = []
-    public var appID: String {
-        return ""
-    }
+    public var appID: String?
     
     private init() {
         NotificationCenter.default.addObserver(forName: UIApplication.didFinishLaunchingNotification, object: nil, queue: .main) { _ in
