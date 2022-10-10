@@ -119,6 +119,7 @@ public class GitMart {
         libraries.forEach({
             $0.handleEvent(eventName: eventName, properties: properties)
         })
+        GitMartEvents.storeEvent(eventName: eventName)
     }
     
     // MARK: - JSON
@@ -148,6 +149,7 @@ public class GitMart {
                 "ios_sdk_version": GitMart.version,
             ],
             "libraries": libraries.map({ ["id": $0.id, "version": $0.version, "bundle_id": $0.bundleID] }),
+            "events": GitMartEvents.loggedEvents(),
         ]
         request.onResponse = { (res: SDKResponse) in
             self.sdkResponse = res
