@@ -7,6 +7,11 @@
 
 import UIKit
 
+protocol JSONObject {
+    init(json: JSON)
+    var jsonDictionary: [String: Any] { get }
+}
+
 struct JSON {
     let value: Any
     

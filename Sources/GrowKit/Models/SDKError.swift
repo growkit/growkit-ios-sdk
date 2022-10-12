@@ -23,4 +23,8 @@ struct SDKError: JSONObject {
         self.code = json[Key.code].intValue
         self.message = json[Key.message].arrayValue.map({ $0.stringValue })
     }
+    
+    var jsonDictionary: [String : Any] {
+        return [:]
+    }
 }

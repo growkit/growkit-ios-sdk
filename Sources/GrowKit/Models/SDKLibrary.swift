@@ -32,4 +32,8 @@ struct SDKLibrary: JSONObject {
         self.isBillingError = json[Key.isBillingError].boolValue
         self.usageLeft = json[Key.usageLeft].intValue
     }
+    
+    var jsonDictionary: [String : Any] {
+        return [:]
+    }
 }

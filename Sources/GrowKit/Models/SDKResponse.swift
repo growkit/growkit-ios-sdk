@@ -28,5 +28,9 @@ struct SDKResponse: JSONObject {
             self.error = nil
         }
     }
+    
+    var jsonDictionary: [String : Any] {
+        return [:]
+    }
 }
 

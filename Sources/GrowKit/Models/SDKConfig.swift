@@ -33,4 +33,8 @@ struct SDKConfig: JSONObject {
         self.lastUpdated = json[Key.lastUpdated].dateValue
         self.json = json[Key.json].value as? [String: Any] ?? [:]
     }
+    
+    var jsonDictionary: [String : Any] {
+        return [:]
+    }
 }

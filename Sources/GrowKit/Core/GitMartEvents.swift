@@ -8,7 +8,6 @@
 import Foundation
 
 enum GitMartEvents {
-    
     static var key: String {
         return "kGitMartEvents-\(C.build())"
     }
@@ -23,5 +22,4 @@ enum GitMartEvents {
         let loggedEvents = UserDefaults.standard.array(forKey: key) as? [String] ?? []
         return loggedEvents
     }
-    
 }
