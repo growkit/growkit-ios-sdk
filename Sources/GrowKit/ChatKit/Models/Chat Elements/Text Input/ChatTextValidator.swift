@@ -7,55 +7,41 @@
 
 import Foundation
 
-public struct ChatTextValidator: JSONObject {
-    let regex: String
+public struct ChatTextValidator {
+    let validateText: (String) -> Bool
     let errorMessage: String?
     
-    public init(regex: String, errorMessage: String?) {
-        self.regex = regex
+    public init(validateText: @escaping (String) -> Bool, errorMessage: String?) {
+        self.validateText = validateText
         self.errorMessage = errorMessage
         let _ = self.validate(text: "")
     }
     
-    init(json: JSON) {
-        self.regex = json["regex"].stringValue
-        self.errorMessage = json["errorMessage"].string
-    }
-    
-    var jsonDictionary: [String : Any] {
-        if let errorMessage = errorMessage {
-            return [
-                "regex": regex,
-                "errorMessage": errorMessage
-            ]
-        } else {
-            return [
-                "regex": regex,
-            ]
-        }
-    }
-    
     public func validate(text: String) -> Bool {
-        let test = NSPredicate(format: "SELF MATCHES %@", regex)
-        let isValid = test.evaluate(with: text)
-        return isValid
+        return validateText(text)
     }
     
     public static func email() -> ChatTextValidator {
-        let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let errorMessage = "Please enter a valid email address."
-        return ChatTextValidator(regex: emailRegEx, errorMessage: errorMessage)
+        return ChatTextValidator(validateText: { text in
+            let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+            let test = NSPredicate(format: "SELF MATCHES %@", emailRegEx)
+            let isValid = test.evaluate(with: text)
+            return isValid
+        }, errorMessage: "Please enter a valid email address.")
     }
     
     public static func phoneNumber() -> ChatTextValidator {
-        let phoneRegEx = "\\d{3}-\\d{3}-\\d{4}$"
-        let errorMessage = "Please enter a valid phone number."
-        return ChatTextValidator(regex: phoneRegEx, errorMessage: errorMessage)
+        return ChatTextValidator(validateText: { text in
+            let phoneRegEx = "\\d{3}-\\d{3}-\\d{4}$"
+            let test = NSPredicate(format: "SELF MATCHES %@", phoneRegEx)
+            let isValid = test.evaluate(with: text)
+            return isValid
+        }, errorMessage: "Please enter a valid phone number.")
     }
     
     public static func length(atLeast: Int, maximum: Int) -> ChatTextValidator {
-        let emailRegEx = "[ A-Z0-9a-z._%+-@]{\(atLeast),\(maximum)}+"
-        let errorMessage = "Please enter a few words"
-        return ChatTextValidator(regex: emailRegEx, errorMessage: errorMessage)
+        return ChatTextValidator(validateText: { text in
+            return text.count > atLeast && text.count <= maximum
+        }, errorMessage: "Please enter at least \(atLeast) character\(atLeast == 1 ? "" : "s")")
     }
 }

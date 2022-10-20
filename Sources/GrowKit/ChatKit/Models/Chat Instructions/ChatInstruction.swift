@@ -9,47 +9,53 @@ import Foundation
 
 public struct ChatInstruction: Chat, JSONObject {
     public let action: ChatAction
+    public let id: String
+    
     public init(_ action: ChatAction) {
         self.action = action
+        self.id = UUID().uuidString
     }
     
     init(json: JSON) {
-        let action = json["action"]["type"].stringValue
+        let action = json["action"].stringValue
         switch action {
-        case "purchaseProduct":
-            let productID = json["action"]["productID"].stringValue
+        case "Purchase Product":
+            let productID = json["productID"].stringValue
             self = ChatInstruction(.purchaseProduct(productID))
-        case "restorePurchases":
+        case "Restore Purchases":
             self = ChatInstruction(.restorePurchases)
-        case "openURL":
-            let urlString = json["action"]["url"].stringValue
-            let inSafariVC = json["action"]["inSafariVC"].boolValue
+        case "Open URL":
+            let urlString = json["url"].stringValue
             let url = URL(string: urlString)!
-            self = ChatInstruction(.openURL(url, inSafariVC))
-        case "requestRating":
+            self = ChatInstruction(.openURL(url))
+        case "Request Rating":
             self = ChatInstruction(.requestRating)
-        case "requestWrittenReview":
+        case "Request Review":
             self = ChatInstruction(.requestWrittenReview)
-        case "contactSupport":
+        case "Contact Support":
             self = ChatInstruction(.contactSupport)
-        case "dismiss":
+        case "Dismiss":
             self = ChatInstruction(.dismiss)
-        case "showCancelButton":
+        case "Show Cancel Button":
             self = ChatInstruction(.showCancelButton)
-        case "delay":
-            let value = json["action"]["value"].doubleValue
-            self = ChatInstruction(.delay(value))
-        case "rainingEmojis":
-            let emoji = json["action"]["emoji"].stringValue
+        case "Delay":
+            let seconds = json["seconds"].doubleValue
+            self = ChatInstruction(.delay(seconds))
+        case "Raining Emojis":
+            let emoji = json["emoji"].stringValue
             self = ChatInstruction(.rainingEmojis(emoji))
-        case "loopStart":
-            let loopID = json["action"]["loopID"].stringValue
+        case "Loop Start":
+            let loopID = json["loopID"].stringValue
             self = ChatInstruction(.loopStart(loopID))
-        case "loopEnd":
-            let loopID = json["action"]["loopID"].stringValue
+        case "Loop End":
+            let loopID = json["loopID"].stringValue
             self = ChatInstruction(.loopEnd(loopID))
+        case "Custom":
+            let customAction = json["custom"].stringValue
+            self = ChatInstruction(.custom(customAction))
         default:
-            self = ChatInstruction(.other(action))
+            let customAction = json["custom"].stringValue
+            self = ChatInstruction(.custom(customAction))
         }
     }
     
@@ -57,101 +63,87 @@ public struct ChatInstruction: Chat, JSONObject {
         switch action {
         case .purchaseProduct(let productID):
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "purchaseProduct",
-                    "productID": productID
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Purchase Product",
+                "productID": productID
             ]
         case .restorePurchases:
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "restorePurchases",
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Restore Purchases",
             ]
-        case .openURL(let url, let inSafariVC):
+        case .openURL(let url):
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "openURL",
-                    "url": url.absoluteString,
-                    "inSafariVC": inSafariVC,
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Open URL",
+                "url": url.absoluteString,
             ]
         case .requestRating:
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "requestRating",
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Request Rating",
             ]
         case .requestWrittenReview:
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "requestWrittenReview",
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Request Review",
             ]
         case .contactSupport:
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "contactSupport",
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Contact Support",
             ]
-        case .other(let other):
+        case .custom(let other):
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": other,
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Custom",
+                "custom": other
             ]
         case .dismiss:
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "dismiss",
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Dismiss",
             ]
         case .showCancelButton:
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "showCancelButton",
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Show Cancel Button",
             ]
         case .delay(let timeInterval):
             return [
                 "chat": "chatInstruction",
-                "action": [
-                    "type": "delay",
-                    "value": timeInterval,
-                ]
+                "action": "Delay",
+                "seconds": timeInterval,
             ]
         case .rainingEmojis(let emoji):
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "rainingEmojis",
-                    "emoji": emoji,
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Raining Emojis",
+                "emoji": emoji,
             ]
         case .loopStart(let loopID):
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "loopStart",
-                    "loopID": loopID,
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Loop Start",
+                "loopID": loopID,
             ]
         case .loopEnd(let loopID):
             return [
-                "chat": "chatInstruction",
-                "action": [
-                    "type": "loopEnd",
-                    "loopID": loopID,
-                ]
+                "id": id,
+                "type": "chatInstruction",
+                "action": "Loop End",
+                "loopID": loopID,
             ]
         }
     }

@@ -1,5 +1,5 @@
 //
-//  WriteViewController.swift
+//  ChatViewController.swift
 //  
 //
 //  Created by Zachary Shakked on 9/12/22.
@@ -7,7 +7,6 @@
 
 import UIKit
 import SafariServices
-import GrowKit
 
 public class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate {
 
@@ -125,7 +124,7 @@ public class ChatViewController: UIViewController, UITableViewDataSource, UITabl
         }
         
         let title = sender.titleLabel?.text ?? ""
-        if let conditionalChat = currentChat as? ChatMessageConditional {
+        if let conditionalChat = currentChat as? ChatQuestion {
             guard let index = conditionalChat.options.firstIndex(where: { $0.option == title }) else { return }
             chatSequence.userTappedButton(index: index, buttonText: title, chat: conditionalChat, controller: self)
         }
@@ -188,7 +187,7 @@ public class ChatViewController: UIViewController, UITableViewDataSource, UITabl
         chatSequence.addUserMessage = { [unowned self] chat in
             self.messages.append((chat, .user))
         }
-        chatSequence.showButtons = { (chatMessageConditional: ChatMessageConditional) -> () in
+        chatSequence.showButtons = { (chatMessageConditional: ChatQuestion) -> () in
             self.currentChat = chatMessageConditional
             let options = chatMessageConditional.options
             let buttons = options.map { [unowned self] (option: ChatOption) -> PowerButton in

@@ -23,7 +23,7 @@ public class ChatSequence {
     
     var addMessage: ((String) -> ())? = nil
     var addUserMessage: ((String) -> ())? = nil
-    var showButtons: ((ChatMessageConditional) -> ())? = nil
+    var showButtons: ((ChatQuestion) -> ())? = nil
     var showTextInput: ((ChatTextInput) -> ())? = nil
     var hideButtons: (() -> ())? = nil
     var showCancelButton: (() -> ())? = nil
@@ -42,7 +42,7 @@ public class ChatSequence {
         self.chats = chats
         self.allChats = chats
         
-        GitMart.shared.confirmAccessToProject(library: ChatKit.self)
+        GrowKit.shared.confirmAccessToProject(library: ChatKit.self)
         ChatKit.shared.registerChatSequence(sequence: self)
     }
     
@@ -76,12 +76,12 @@ public class ChatSequence {
     }
     
     func start() {
-        GMLogger.shared.log(.module(ChatKit.self), "Starting chat sequence: \(id)")
+        GKLogger.shared.log(.module(ChatKit.self), "Starting chat sequence: \(id)")
         continueChat()
         startTime = Date()
         
         let event = ChatAnalyticEvent.started(self)
-        GitMart.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
+        GrowKit.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
     }
     
     func stop() {
@@ -106,17 +106,17 @@ public class ChatSequence {
             return
         }
         
-        GMLogger.shared.log(.module(ChatKit.self), "Next Chat: \(nextChat()?.type.description ?? "")")
+        GKLogger.shared.log(.module(ChatKit.self), "Next Chat: \(nextChat()?.type.description ?? "")")
         guard let next = self.next() else {
             if self.levels.count > 0 {
                 self.chats = self.levels.removeLast()
                 self.continueChat()
             } else {
-                GMLogger.shared.log(.module(ChatKit.self), "Complete chat sequence: \(id)")
+                GKLogger.shared.log(.module(ChatKit.self), "Complete chat sequence: \(id)")
                 let elapsedTime = Date().timeIntervalSince1970 - startTime.timeIntervalSince1970
 
                 let event = ChatAnalyticEvent.finished(self, elapsedTime)
-                GitMart.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
+                GrowKit.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
             }
             return
         }
@@ -149,9 +149,9 @@ public class ChatSequence {
                     self.continueChat()
                 }
             }
-        case .chatMessageConditional:
+        case .chatQuestion:
             
-            if let chatMessageConditional = next as? ChatMessageConditional {
+            if let chatMessageConditional = next as? ChatQuestion {
                 var nextMessage = chatMessageConditional.message
                 if let previousAnswer = previousAnswer {
                     nextMessage = nextMessage.replacingOccurrences(of: "%@", with: previousAnswer)
@@ -195,11 +195,11 @@ public class ChatSequence {
         case .chatInstruction:
             if let chatInstruction = next as? ChatInstruction {
                 let event = ChatAnalyticEvent.instruction(self, chatInstruction.action)
-                GitMart.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
+                GrowKit.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
                 
                 switch chatInstruction.action {
-                case .openURL(let url, let showInSafari):
-                    GitMart.shared.delegate?.handleAction(library: ChatKit.self, action: .openURL(url, showInSafari), controller: controller)
+                case .openURL(let url):
+                    GrowKit.shared.delegate?.handleAction(library: ChatKit.self, action: .openURL(url), controller: controller)
                     self.continueChat()
                     
                 case .showCancelButton:
@@ -212,12 +212,12 @@ public class ChatSequence {
                         self.continueChat()
                     }
                     
-                case .other(let action):
-                    GitMart.shared.delegate?.handleAction(library: ChatKit.self, action: .other(action), controller: controller)
+                case .custom(let action):
+                    GrowKit.shared.delegate?.handleAction(library: ChatKit.self, action: .other(action), controller: controller)
                     self.continueChat()
                     
                 case .contactSupport:
-                    GitMart.shared.delegate?.handleAction(library: ChatKit.self, action: .contactSupport, controller: controller)
+                    GrowKit.shared.delegate?.handleAction(library: ChatKit.self, action: .contactSupport, controller: controller)
                     self.continueChat()
 
                 case .delay(let delay):
@@ -237,19 +237,19 @@ public class ChatSequence {
                         self.continueChat()
                     }
                 case .requestRating:
-                    GitMart.shared.delegate?.handleAction(library: ChatKit.self, action: .requestRating, controller: controller)
+                    GrowKit.shared.delegate?.handleAction(library: ChatKit.self, action: .requestRating, controller: controller)
                     self.continueChat()
                     
                 case .requestWrittenReview:
-                    GitMart.shared.delegate?.handleAction(library: ChatKit.self, action: .requestWrittenReview, controller: controller)
+                    GrowKit.shared.delegate?.handleAction(library: ChatKit.self, action: .requestWrittenReview, controller: controller)
                     self.continueChat()
                     
                 case .purchaseProduct(let product):
-                    GitMart.shared.delegate?.handleAction(library: ChatKit.self, action: .purchaseProduct(product), controller: controller)
+                    GrowKit.shared.delegate?.handleAction(library: ChatKit.self, action: .purchaseProduct(product), controller: controller)
                     self.continueChat()
 
                 case .restorePurchases:
-                    GitMart.shared.delegate?.handleAction(library: ChatKit.self, action: .restorePurchases, controller: controller)
+                    GrowKit.shared.delegate?.handleAction(library: ChatKit.self, action: .restorePurchases, controller: controller)
                     self.continueChat()
                 }
             }
@@ -257,7 +257,7 @@ public class ChatSequence {
         }
     }
 
-    func userTappedButton(index: Int, buttonText: String, chat: ChatMessageConditional, controller: ChatViewController) {
+    func userTappedButton(index: Int, buttonText: String, chat: ChatQuestion, controller: ChatViewController) {
         self.hideButtons?()
         self.previousAnswer = buttonText
         
@@ -277,7 +277,7 @@ public class ChatSequence {
         
         let analytic = ChatButtonAnalytic(chat: chat, selectedOption: buttonText)
         let event = ChatAnalyticEvent.buttonPressed(self, analytic)
-        GitMart.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
+        GrowKit.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
     }
     
     func userEnteredText(text: String, chat: ChatTextInput, controller: ChatViewController) {
@@ -290,14 +290,14 @@ public class ChatSequence {
         
         let analytic = ChatTextInputAnalytic(chat: chat, enteredText: text)
         let event = ChatAnalyticEvent.textEntered(self, analytic)
-        GitMart.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
+        GrowKit.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
     }
     
     func dismissed() {
         let elapsedTime = Date().timeIntervalSince1970 - startTime.timeIntervalSince1970
         self.analyticEventBlock?(ChatAnalyticEvent.dimissed(self, elapsedTime))
         let event = ChatAnalyticEvent.dimissed(self, elapsedTime)
-        GitMart.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
+        GrowKit.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
     }
     
     internal func readingTime(_ string: String) -> Double {

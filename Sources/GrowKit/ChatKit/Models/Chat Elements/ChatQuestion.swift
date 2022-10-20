@@ -7,23 +7,27 @@
 
 import UIKit
 
-public struct ChatMessageConditional: Chat, JSONObject{
+public struct ChatQuestion: Chat, JSONObject {
+    public let id: String
     public let message: String
     public let options: [ChatOption]
         
     public init(message: String, options: [ChatOption]) {
+        self.id = UUID().uuidString
         self.message = message
         self.options = options
     }
     
     init(json: JSON) {
+        self.id = json["id"].stringValue
         self.message = json["message"].stringValue
         self.options = json["options"].arrayValue.map({ ChatOption(json: $0) })
     }
     
     public var jsonDictionary: [String : Any] {
         return [
-            "chat": "chatMessageConditional",
+            "type": "chatQuestion",
+            "id": id,
             "message": message,
             "options": options.map({ $0.jsonDictionary })
         ]

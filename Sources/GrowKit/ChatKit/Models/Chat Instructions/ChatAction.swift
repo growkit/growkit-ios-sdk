@@ -6,23 +6,22 @@
 //
 
 import UIKit
-import GrowKit
 
 public enum ChatAction {
     case purchaseProduct(String)
     case restorePurchases
-    case openURL(URL, Bool)
+    case openURL(URL)
     case requestRating
     case requestWrittenReview
-    // case requestPermission(GitMartPermission)
     case contactSupport
-    case other(String)
+    case custom(String)
     case dismiss
     case showCancelButton
     case delay(TimeInterval)
     case rainingEmojis(String)
     case loopStart(String)
     case loopEnd(String)
+    // webhook
     
     var loopID: String? {
         switch self {
@@ -41,7 +40,7 @@ public enum ChatAction {
             return "purchase product \(string)"
         case .restorePurchases:
             return "restore purchases"
-        case .openURL(let url, _):
+        case .openURL(let url):
             return "open url \(url.absoluteURL)"
         case .requestRating:
             return "request rating"
@@ -49,7 +48,7 @@ public enum ChatAction {
             return "request written review"
         case .contactSupport:
             return "contact support"
-        case .other(let string):
+        case .custom(let string):
             return "other \(string)"
         case .dismiss:
             return "dismiss"

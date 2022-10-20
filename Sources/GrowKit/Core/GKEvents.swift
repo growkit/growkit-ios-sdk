@@ -7,9 +7,9 @@
 
 import Foundation
 
-enum GitMartEvents {
+enum GKEvents {
     static var key: String {
-        return "kGitMartEvents-\(C.build())"
+        return "kGKEvents-\(C.build())"
     }
     
     static func storeEvent(eventName: String) {

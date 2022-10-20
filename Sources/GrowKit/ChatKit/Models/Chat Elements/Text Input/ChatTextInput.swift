@@ -8,53 +8,135 @@
 import UIKit
 
 public struct ChatTextInput: Chat, JSONObject {
+    public let id: String
     public let message: String
+    public let required: Bool
+
     public let placeholder: String
+    public let inputType: ChatInputType
+        
     public let validator: ChatTextValidator?
     public let keyboardType: UIKeyboardType
     public let returnKey: UIReturnKeyType
     public let contentType: UITextContentType?
     
-    public init(message: String, placeholder: String, validator: ChatTextValidator?, keyboardType: UIKeyboardType, returnKey: UIReturnKeyType, contentType: UITextContentType?) {
+    public init(message: String,
+                inputType: ChatInputType,
+                required: Bool) {
+        self.id = UUID().uuidString
         self.message = message
-        self.placeholder = placeholder
-        self.validator = validator
-        self.keyboardType = keyboardType
-        self.returnKey = returnKey
-        self.contentType = contentType
+        self.required = required
+        
+        self.placeholder = inputType.placeholder
+        self.inputType = inputType
+        self.validator = inputType.validator
+        self.keyboardType = inputType.keyboardType
+        self.returnKey = inputType.returnKey
+        self.contentType = inputType.contentType
     }
     
     init(json: JSON) {
+        self.id = json["id"].stringValue
         self.message = json["message"].stringValue
         self.placeholder = json["placeholder"].stringValue
-        self.validator = ChatTextValidator(json: json["validator"])
-        self.keyboardType = UIKeyboardType(type: json["keyboardType"].stringValue) ?? .`default`
-        self.returnKey = UIReturnKeyType(type: json["returnKey"].stringValue) ?? .`default`
-        self.contentType = UITextContentType(type: json["contentType"].stringValue)
+        self.required = json["required"].bool ?? false
+        if let inputTypeString = json["inputType"].string, let inputType = ChatInputType(rawValue: inputTypeString) {
+            self.inputType = inputType
+            self.validator = inputType.validator
+            self.keyboardType = inputType.keyboardType
+            self.returnKey = inputType.returnKey
+            self.contentType = inputType.contentType
+        } else {
+            self.inputType = .longText
+            self.keyboardType = .`default`
+            self.returnKey = .done
+            self.contentType = nil
+            self.validator = nil
+        }
     }
     
     var jsonDictionary: [String : Any] {
         var theJSON: [String: Any] = [
-            "chat": "chatTextInput",
+            "type": "chatTextInput",
+            "id": id,
             "message": message,
-            "keyboardType": keyboardType.rawValueString,
-            "returnKey": returnKey.rawValueString,
+            "inputType": inputType.rawValue,
+            "required": required,
         ]
         
-        if let validator = validator {
-            var valdiatorDict: [String: Any] = ["regex": validator.regex]
-            if let errorMessage = validator.errorMessage {
-                valdiatorDict["errorMessage"] = errorMessage
-            }
-            
-            theJSON["validator"] = valdiatorDict
-        }
-        
-        if let contentType {
-            theJSON["contentType"] = contentType
-        }
-        
         return theJSON
+    }
+}
+
+public enum ChatInputType: String {
+    case email
+    case password
+    case shortText
+    case longText
+    case number
+    case phoneNumber
+    
+    var placeholder: String {
+        switch self {
+        case .email:
+            return "i.e. john@apple.com"
+        case .password:
+            return "i.e. password123"
+        case .shortText:
+            return "enter a short message..."
+        case .longText:
+            return "enter a few sentences..."
+        case .number:
+            return "enter a number..."
+        case .phoneNumber:
+            return  "+17325556358"
+        }
+    }
+
+    var keyboardType: UIKeyboardType {
+        switch self {
+        case .email:
+            return .emailAddress
+        case .password, .shortText, .longText:
+            return .`default`
+        case .number:
+            return .numberPad
+        case .phoneNumber:
+            return .phonePad
+        }
+    }
+    
+    var returnKey: UIReturnKeyType {
+        return .done
+    }
+    
+    var contentType: UITextContentType? {
+        switch self {
+        case .email:
+            return .emailAddress
+        case .password:
+            return .password
+        case .shortText, .longText, .number:
+            return nil
+        case .phoneNumber:
+            return .telephoneNumber
+        }
+    }
+    
+    var validator: ChatTextValidator {
+        switch self {
+        case .email: return ChatTextValidator.email()
+        case .password: return ChatTextValidator.length(atLeast: 1, maximum: 32)
+        case .shortText: return ChatTextValidator.length(atLeast: 1, maximum: 280)
+        case .longText: return ChatTextValidator.length(atLeast: 1, maximum: 1000)
+        case .number: return ChatTextValidator(validateText: { text in
+            return text.allSatisfy { character in
+                character.isNumber
+                
+            }
+        }, errorMessage: "Please enter a valid number.")
+        case .phoneNumber: return ChatTextValidator.phoneNumber()
+        }
     }
 }
 
@@ -118,6 +200,8 @@ extension UIKeyboardType {
             return "asciiCapableNumberPad"
         case .alphabet:
             return "alphabet"
+        default:
+            return "unknown"
         }
     }
     

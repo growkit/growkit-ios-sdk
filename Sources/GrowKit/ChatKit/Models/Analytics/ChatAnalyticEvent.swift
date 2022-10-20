@@ -70,7 +70,7 @@ public enum ChatAnalyticEvent {
 }
 
 public struct ChatButtonAnalytic {
-    public let chat: ChatMessageConditional
+    public let chat: ChatQuestion
     public let selectedOption: String
 }
 

@@ -1,5 +1,5 @@
 //
-//  GMRequest.swift
+//  GKRequest.swift
 //  
 //
 //  Created by Zachary Shakked on 9/22/22.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class GMRequest<T: JSONObject> {
+class GKRequest<T: JSONObject> {
     private let apiURL = "https://api.gitmart.co/v2"
     
     let endpoint: String
@@ -48,7 +48,7 @@ class GMRequest<T: JSONObject> {
             urlRequest.httpBody = jsonBody
             
             let task: URLSessionDataTask = URLSession.shared.dataTask(with: urlRequest) { (data, urlResponse, error) in
-                GMLogger.shared.logRequest(self, headers: true, data: data, urlResponse: urlResponse, error: error)
+                GKLogger.shared.logRequest(self, headers: true, data: data, urlResponse: urlResponse, error: error)
                 
                 guard error == nil else {
                     return

@@ -9,7 +9,7 @@ import Foundation
 
 internal struct C {
     struct Setting {
-        static let userID = "kGitMartUserID"
+        static let userID = "kGrowthKitUserID"
     }
     
     static let bundleVersion: () -> String = {
@@ -57,10 +57,10 @@ internal struct C {
     }
     
     static let APIKey: () -> (String) = {
-        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GitMartAPIKey") as? String {
+        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GrowthKitAPIKey") as? String {
             return apiKey
         } else {
-            fatalError("You must add to your Info.plist a key named \"GitMartAPIKey\" with a string value that is your GitMart API Key from your dashboard.")
+            fatalError("You must add to your Info.plist a key named \"GrowthKitAPIKey\" with a string value that is your GrowthKit API Key from your dashboard.")
         }
     }
 }

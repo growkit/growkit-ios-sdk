@@ -110,6 +110,18 @@ public class BuildChatSequenceViewController: UIViewController, UITableViewDataS
             self.present(navigationViewController, animated: true)
         })
         actionSheet.addAction(UIAlertAction(title: "Instruction", style: .default) { _ in
+            let form = Form(items: [
+                LabelFormItem(text: "Hey Khalid", font: UIFont.systemFont(ofSize: 32.0, weight: .bold), textColor: UIColor.black.withAlphaComponent(0.72)),
+                LabelFormItem(text: "This is a label form item.", font: UIFont.systemFont(ofSize: 16.0, weight: .medium), textColor: UIColor.black.withAlphaComponent(0.72)),
+                TextInputFormItem(title: "Enter your name", placeholder: "i.e. your name", regex: nil, minLength: 1, multiLine: false),
+                TextInputFormItem(title: "Enter your biography", placeholder: "i.e. this is my bio", regex: nil, minLength: 1, multiLine: true),
+                VariableTextOptionsFormItem(addOptionTitle: "Add a Favorite Place", placeholder: "i.e. London", maxNumberOfValues: 10),
+                LabelFormItem(text: "Thanks!", font: UIFont.systemFont(ofSize: 32.0, weight: .bold), textColor: UIColor.black.withAlphaComponent(0.72)),
+            ])
+            let formViewController = FormViewController(form: form)
+            let navigationViewController = UINavigationController(rootViewController: formViewController)
+            formViewController.navigationItem.title = "Add Conditional Message"
+            self.present(navigationViewController, animated: true)
             
         })
         actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -154,8 +166,8 @@ public class BuildChatSequenceViewController: UIViewController, UITableViewDataS
                 cell.descriptionLabel.text = str
                 cell.accessoryType = .none
             }
-        case .chatMessageConditional:
-            if let chat = chat as? ChatMessageConditional {
+        case .chatQuestion:
+            if let chat = chat as? ChatQuestion {
                 cell.titleLabel.text = "Conditional"
                 var str = "\(chat.message)\n\n"
                 for i in 0..<chat.options.count {
@@ -170,9 +182,6 @@ public class BuildChatSequenceViewController: UIViewController, UITableViewDataS
                 cell.titleLabel.text = "Text Input"
                 
                 var msg = "\"\(chat.message)\"\n\n- placeholder: \(chat.placeholder)"
-                if let regex = chat.validator?.regex {
-                    msg.append("\n- regex: \(regex)")
-                }
                 msg.append("\n- keyboardType: \(chat.keyboardType.rawValueString)")
                 msg.append("\n- returnKey: \(chat.returnKey.rawValueString)")
                 if let contentType = chat.contentType {
@@ -190,15 +199,15 @@ public class BuildChatSequenceViewController: UIViewController, UITableViewDataS
                     msg = "Purchase Product \(productID)"
                 case .restorePurchases:
                     msg = "Restore Purchases"
-                case .openURL(let url, let withSafari):
-                    msg = "Open URL \(url.absoluteURL) - in SafariViewController \(withSafari)"
+                case .openURL(let url):
+                    msg = "Open URL \(url.absoluteURL) - in SafariViewController"
                 case .requestRating:
                     msg = "Request Rating"
                 case .requestWrittenReview:
                     msg = "Request Written Review"
                 case .contactSupport:
                     msg = "Contact Support"
-                case .other(let str):
+                case .custom(let str):
                     msg = "Other - \(str)"
                 case .dismiss:
                     msg = "Dismiss"
@@ -235,10 +244,10 @@ public class BuildChatSequenceViewController: UIViewController, UITableViewDataS
     
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let chat: Chat = chats[indexPath.row]
-        if let chat = chat as? ChatMessageConditional {
+        if let chat = chat as? ChatQuestion {
             self.indexOfSelectedChat = indexPath
             let alert = UIAlertController(title: "Choose an Option", message: nil, preferredStyle: .actionSheet)
-            let actions = (0..<chat.options.count).forEach({ index in
+            (0..<chat.options.count).forEach({ index in
                 let option = chat.options[index]
                 alert.addAction(UIAlertAction(title: option.option, style: .default) { _ in
                     let vc = BuildChatSequenceViewController(chats: option.chats)
@@ -249,7 +258,7 @@ public class BuildChatSequenceViewController: UIViewController, UITableViewDataS
                         let previousOption = chat.options[index]
                         var updatedOptions = chat.options
                         updatedOptions[index] = ChatOption(previousOption.option, sfSymbolName: previousOption.sfSymbolName, chats: controller.chats)
-                        let updatedConditional = ChatMessageConditional(message: chat.message, options: updatedOptions)
+                        let updatedConditional = ChatQuestion(message: chat.message, options: updatedOptions)
                         self.chats[indexPath.row] = updatedConditional
                         self.tableView.reloadRows(at: [indexPath], with: .automatic)
                     }

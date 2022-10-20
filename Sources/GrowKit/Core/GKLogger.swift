@@ -7,35 +7,35 @@
 
 import Foundation
 
-public class GMLogger {
-    public static let shared: GMLogger = GMLogger()
+public class GKLogger {
+    public static let shared: GKLogger = GKLogger()
     
     public enum Category {
         case request
-        case gitMart
-        case module(GitMartLibrary.Type)
+        case growthkit
+        case module(GKLibrary.Type)
         
         var title: String {
             switch self {
             case .request:
                 return "Request"
-            case .gitMart:
-                return "GitMart"
+            case .growthkit:
+                return "GrowthKit"
             case .module(let type):
                 return type.name
             }
         }
     }
     
-    public var enabledCategories: [Category] = [.gitMart]
+    public var enabledCategories: [Category] = [.growthkit]
     
     public func log(_ category: Category, _ log: String) {
         guard enabledCategories.contains(where: { $0.title == category.title }) else { return }
         print("<\(category.title)> \(log)")
     }
     
-    func logRequest<T: JSONObject>(_ gmRequest: GMRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
-        var logObject = gmRequest.logObject
+    func logRequest<T: JSONObject>(_ GKRequest: GKRequest<T>, headers: Bool, data: Data?, urlResponse: URLResponse?, error: Error?) {
+        var logObject = GKRequest.logObject
         
         if let data = data, let data = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {
             logObject["response"] = data

@@ -21,8 +21,8 @@ struct AnyChat {
             return ChatUserMessage(json: json)
         case .chatRandomMessage:
             return ChatRandomMessage(json: json)
-        case .chatMessageConditional:
-            return ChatMessageConditional(json: json)
+        case .chatQuestion:
+            return ChatQuestion(json: json)
         case .chatInstruction:
             return ChatInstruction(json: json)
         case .chatTextInput:

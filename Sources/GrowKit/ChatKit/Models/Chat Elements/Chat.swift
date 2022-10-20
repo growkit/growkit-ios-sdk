@@ -9,6 +9,7 @@ import UIKit
 
 public protocol Chat  {
     var type: ChatType { get }
+    var id: String { get }
 }
 
 public extension Chat {
@@ -22,7 +23,7 @@ public enum ChatType {
     case chatMessage
     case chatUserMessage
     case chatRandomMessage
-    case chatMessageConditional
+    case chatQuestion
     case chatInstruction
     case chatTextInput
     
@@ -34,8 +35,8 @@ public enum ChatType {
             self = .chatUserMessage
         case "chatRandomMessage".lowercased():
             self = .chatRandomMessage
-        case "chatMessageConditional".lowercased():
-            self = .chatMessageConditional
+        case "chatQuestion".lowercased():
+            self = .chatQuestion
         case "chatInstruction".lowercased():
             self = .chatInstruction
         case "chatTextInput".lowercased():
@@ -55,8 +56,8 @@ public enum ChatType {
             return "chatUserMessage"
         case .chatRandomMessage:
             return "chatRandomMessage"
-        case .chatMessageConditional:
-            return "chatMessageConditional"
+        case .chatQuestion:
+            return "chatQuestion"
         case .chatInstruction:
             return "chatInstruction"
         case .chatTextInput:

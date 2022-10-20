@@ -6,10 +6,9 @@
 //
 
 import UIKit
-import GrowKit
 import NotificationCenter
 
-public class ChatKit: NSObject, GitMartLibrary {
+public class ChatKit: NSObject, GKLibrary {
     public static let id = "632b6c551015bcf8ac4843d9"
     public static let name = "ChatKit"
     public static let shared: ChatKit = ChatKit()
@@ -21,10 +20,10 @@ public class ChatKit: NSObject, GitMartLibrary {
     private(set) var theme: ChatTheme = .lightMode
     
     private var json: [String: Any]? {
-        return GitMart.shared.json(for: ChatKit.self)
+        return GrowKit.shared.json(for: ChatKit.self)
     }
     
-    // Automatically called on GitMart init
+    // Automatically called on GrowKit init
     public static func start() {
         NotificationCenter.default.addObserver(ChatKit.shared, selector: #selector(ChatKit.shared.applicationDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(ChatKit.shared, selector: #selector(ChatKit.shared.applicationDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
@@ -89,7 +88,7 @@ public class ChatKit: NSObject, GitMartLibrary {
             ChatKit.shared.registerViewCount(for: chatSequence.id, event: eventName)
             let chatViewController = ChatViewController(chatSequence: chatSequence.copy(), theme: shared.theme)
             UIApplication.shared.topViewController()?.present(chatViewController, animated: true)
-            GMLogger.shared.log(.module(ChatKit.self), "Presenting chat sequence: \(chatSequence.id) - viewCount: \(currentViewCount) - timesToShow: \(timesToShow)")
+            GKLogger.shared.log(.module(ChatKit.self), "Presenting chat sequence: \(chatSequence.id) - viewCount: \(currentViewCount) - timesToShow: \(timesToShow)")
         }
     }
     

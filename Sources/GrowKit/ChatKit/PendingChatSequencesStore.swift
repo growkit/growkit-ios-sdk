@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import GrowKit
 
 class PendingChatSequencesStore {
     
@@ -27,7 +26,7 @@ class PendingChatSequencesStore {
             if let data = UserDefaults.standard.data(forKey: storeKey) {
                 let decoder = JSONDecoder()
                 if let pendingChatSequenceRecords = try? decoder.decode([PendingChatSequenceRecord].self, from: data) {
-                    GMLogger.shared.log(.module(ChatKit.self), "GET PendingChatSequenceRecords: \(pendingChatSequenceRecords)")
+                    GKLogger.shared.log(.module(ChatKit.self), "GET PendingChatSequenceRecords: \(pendingChatSequenceRecords)")
                     return pendingChatSequenceRecords
                 }
             }
@@ -37,7 +36,7 @@ class PendingChatSequencesStore {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(newValue) {
                 UserDefaults.standard.set(encoded, forKey: storeKey)
-                GMLogger.shared.log(.module(ChatKit.self), "SET PendingChatSequenceRecords: \(pendingChatSequenceRecords)")
+                GKLogger.shared.log(.module(ChatKit.self), "SET PendingChatSequenceRecords: \(pendingChatSequenceRecords)")
             }
         }
     }
