@@ -12,6 +12,8 @@ class SequencesViewController: UIViewController, UITableViewDataSource, UITableV
     var chatSequences: [ChatSequence] = []
     @IBOutlet weak var tableView: UITableView!
     
+    let activityIndicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .medium)
+    
     init(chatSequences: [ChatSequence]) {
         self.chatSequences = chatSequences
         super.init(nibName: "SequencesViewController", bundle: Bundle.module)
@@ -29,15 +31,25 @@ class SequencesViewController: UIViewController, UITableViewDataSource, UITableV
         tableView.register(UINib(nibName: "SequenceCell", bundle: Bundle.module), forCellReuseIdentifier: SequenceCell.reuseIdentifier)
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelButtonPressed))
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refreshButtonPressed))
     }
     
     @objc func cancelButtonPressed() {
         dismiss(animated: true)
     }
     
-    @objc func addButtonPressed() {
+    @objc func refreshButtonPressed() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: activityIndicatorView)
+        activityIndicatorView.startAnimating()
         
+        GrowKit.shared.refresh { [unowned self] in
+            DispatchQueue.main.async {
+                self.chatSequences = ChatKit.shared.chatSequences
+                self.tableView.reloadData()
+                self.activityIndicatorView.stopAnimating()
+                self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(self.refreshButtonPressed))
+            }
+        }
     }
     
     // MARK: - UITableViewDataSource
@@ -55,12 +67,8 @@ class SequencesViewController: UIViewController, UITableViewDataSource, UITableV
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let chatSequence = chatSequences[indexPath.row]
-        let builderViewController = BuildChatSequenceViewController(chats: chatSequence.chats)
-        builderViewController.navigationItem.title = chatSequence.id
-        navigationController?.pushViewController(builderViewController, animated: true)
+        let chatSequence = chatSequences[indexPath.row].copy()
+        let chatVC = ChatViewController(chatSequence: chatSequence, theme: ChatKit.shared.theme)
+        self.present(chatVC, animated: true)
     }
-    
-    
-    
 }

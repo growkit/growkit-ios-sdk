@@ -64,6 +64,10 @@ public class GrowKit {
         makeLibraryRequest()
     }
     
+    public func refresh(completion: @escaping (() -> ())) {
+        makeLibraryRequest(completion: completion)
+    }
+    
     // MARK: - Confirm Access
     
     @discardableResult
@@ -102,12 +106,6 @@ public class GrowKit {
         return true
     }
     
-    // MARK: - Library Crash
-    
-    public func crash(libraryID: String) {
-        fatalError("You are attempting to use a GitMart library that you haven't paid for: \(libraryID). Please visit your GitMart account to update your billing information.")
-    }
-    
     // MARK: - Triggers
     
     public func logEvent(eventName: String, properties: [String: Any]) {
@@ -130,7 +128,7 @@ public class GrowKit {
         NotificationCenter.default.removeObserver(self)
     }
     
-    private func makeLibraryRequest() {
+    private func makeLibraryRequest(completion: (() -> ())? = nil) {
         let request: GKRequest<SDKResponse> = GKRequest(endpoint: "/sdk/libraries", httpMethod: "POST")
         request.body = [
             "metadata": [
@@ -153,9 +151,11 @@ public class GrowKit {
                     library.jsonLoaded(dictionary: libraryJSON.json)
                 }
             })
+            completion?()
         }
         request.onError = { err in
             GKLogger.shared.log(.request, "err: \(err.localizedDescription)")
+            completion?()
         }
         request.start()
         self.sdkRequest = request

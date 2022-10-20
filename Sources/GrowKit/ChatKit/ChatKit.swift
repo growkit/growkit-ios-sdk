@@ -111,11 +111,7 @@ public class ChatKit: NSObject, GKLibrary {
     
     public static func jsonLoaded(dictionary: [String : Any]) {
         let json = JSON(dictionary)
-        json["sequences"].arrayValue.forEach({ json in
-            let chatSequence = ChatSequence(json: json)
-            self.shared.registerChatSequence(sequence: chatSequence)
-        })
-        
+        self.shared.chatSequences = json["sequences"].arrayValue.map({ ChatSequence(json: $0) })
         self.shared.triggers = json["triggers"].arrayValue.map(Trigger.init)
     }
 }

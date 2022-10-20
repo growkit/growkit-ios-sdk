@@ -20,6 +20,7 @@ enum GKEvents {
     
     static func loggedEvents() -> [String] {
         let loggedEvents = UserDefaults.standard.array(forKey: key) as? [String] ?? []
-        return loggedEvents
+        let setOfLoggedEvents = Set(loggedEvents)
+        return Array(setOfLoggedEvents)
     }
 }
