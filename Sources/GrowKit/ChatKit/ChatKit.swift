@@ -17,7 +17,7 @@ public class ChatKit: NSObject, GKLibrary {
     
     private(set) var chatSequences: [ChatSequence] = []
     private(set) var triggers: [Trigger] = []
-    private(set) var theme: ChatTheme = .lightMode
+    public var theme: ChatTheme = .lightMode
     
     private var json: [String: Any]? {
         return GrowKit.shared.json(for: ChatKit.self)

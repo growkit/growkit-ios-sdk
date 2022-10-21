@@ -57,10 +57,10 @@ internal struct C {
     }
     
     static let APIKey: () -> (String) = {
-        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GrowthKitAPIKey") as? String {
+        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GrowKitAPIKey") as? String {
             return apiKey
         } else {
-            fatalError("You must add to your Info.plist a key named \"GrowthKitAPIKey\" with a string value that is your GrowthKit API Key from your dashboard.")
+            fatalError("You must add to your Info.plist a key named \"GrowKitAPIKey\" with a string value that is your GrowKit API Key from your dashboard.")
         }
     }
 }

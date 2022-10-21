@@ -12,7 +12,7 @@ struct AnyChat {
         Concrect types like this can be used to initialize protocols from decodable objects
      */
     static func chat(for json: JSON) -> Chat? {
-        let type = json["chat"].stringValue
+        let type = json["type"].stringValue
         guard let chatType = ChatType(chatType: type) else { return nil }
         switch chatType {
         case .chatMessage:

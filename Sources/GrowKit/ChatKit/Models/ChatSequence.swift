@@ -12,6 +12,7 @@ let libraryID = "632b6c551015bcf8ac4843d9"
 public class ChatSequence {
     
     public let id: String
+    public let name: String
     public var readingSpeed: Double = 1.0
     public var analyticEventBlock: ((ChatAnalyticEvent) -> ())? = nil
     
@@ -41,12 +42,14 @@ public class ChatSequence {
         self.id = id
         self.chats = chats
         self.allChats = chats
+        self.name = id
         
         GrowKit.shared.confirmAccessToProject(library: ChatKit.self)
         ChatKit.shared.registerChatSequence(sequence: self)
     }
     
     init(json: JSON) {
+        self.name = json["name"].stringValue
         self.id = json["id"].stringValue
         self.chats = json["chats"].arrayValue.map({ AnyChat.chat(for: $0) }).compactMap({ $0 })
         self.allChats = self.chats
