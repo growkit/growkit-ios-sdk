@@ -90,7 +90,7 @@ public class ChatKit: NSObject, GKLibrary {
             let chatViewController = ChatViewController(chatSequence: chatSequence.copy(), theme: shared.theme)
             // WebBased ChatKit
             let webBasedViewController = ChatWebViewController(chatSequence: chatSequence.copy(), theme: shared.theme, webviewURL: shared.webviewURL)
-            if isWebMode {
+            if shared.isWebMode {
                 UIApplication.shared.topViewController()?.present(webBasedViewController, animated: true)
             }else {
                 UIApplication.shared.topViewController()?.present(chatViewController, animated: true)
