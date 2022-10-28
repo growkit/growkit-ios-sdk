@@ -58,9 +58,9 @@ struct ChatKitWebViewContainer: UIViewRepresentable {
 extension ChatKitWebViewContainer {
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         @ObservedObject private var webViewModel: ChatKitWebViewModel
-        private let parent: WebViewContainer
+        private let parent: ChatKitWebViewContainer
 
-        init(_ parent: WebViewContainer, _ webViewModel: WebViewModel) {
+        init(_ parent: ChatKitWebViewContainer, _ webViewModel: ChatKitWebViewModel) {
             self.parent = parent
             self.webViewModel = webViewModel
 
