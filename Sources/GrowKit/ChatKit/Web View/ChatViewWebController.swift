@@ -23,8 +23,9 @@ class ChatWebViewController: UIViewController, WKUIDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        let myURL = URL(string:"http://localhost:8000/chat")
+        // http://localhost:8000/chat" 
+        // https://growkit.app/chat
+        let myURL = URL(string:"https://growkit.app/chat")
         let myRequest = URLRequest(url: myURL!)
         webView.load(myRequest)
         let contentController = self.webView.configuration.userContentController
@@ -41,7 +42,7 @@ extension ChatWebViewController: WKScriptMessageHandler{
         print(dict)
         hapticFeedback()
     }
-    
+
     private func hapticFeedback() {
         if #available(iOS 13.0, *) {
             UIImpactFeedbackGenerator().impactOccurred(intensity: 0.7)
