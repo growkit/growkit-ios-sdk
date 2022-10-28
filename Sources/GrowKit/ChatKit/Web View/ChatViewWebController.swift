@@ -14,13 +14,22 @@ class ChatWebViewController: UIViewController, WKUIDelegate {
 
     var webView: WKWebView!
 
-    
+    public var chatSequence: ChatSequence
+    public var theme: ChatTheme
     // http://localhost:8000/chat
     // https://growkit.app/chat
     public var webviewURL: String = "https://growkit.app/chat"
-    public var chatSequence: ChatSequence
-    public var theme: ChatTheme
+     init(chatSequence: ChatSequence, theme: ChatTheme, webviewURL: String){
+        super.init()
+        self.chatSequence = chatSequence
+        self.theme = theme
+        self.webviewURL = webviewURL
+         super.init(nibName: "ChatWebViewController", bundle: Bundle.module)
+   }
 
+   required convenience init?(coder: NSCoder) {
+       fatalError("This class does not support NSCoder")
+   }
     override func loadView() {
         let webConfiguration = WKWebViewConfiguration()
         webView = WKWebView(frame: .zero, configuration: webConfiguration)
