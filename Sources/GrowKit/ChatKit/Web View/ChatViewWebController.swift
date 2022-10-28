@@ -22,7 +22,7 @@ class ChatKitWebViewModel: ObservableObject {
     }
 }
 // self.webView.configuration.userContentController.add(a,name: "observer")
-struct ChatKitWebViewContainer: UIViewRepresentable {
+class ChatKitWebViewContainer: UIViewController, UIViewRepresentable {
     @ObservedObject var webViewModel: ChatKitWebViewModel
     func makeCoordinator() -> ChatKitWebViewContainer.Coordinator {
         Coordinator(self, webViewModel)
