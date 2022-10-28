@@ -89,8 +89,13 @@ public class ChatKit: NSObject, GKLibrary {
             ChatKit.shared.registerViewCount(for: chatSequence.id, event: eventName)
             let chatViewController = ChatViewController(chatSequence: chatSequence.copy(), theme: shared.theme)
             // WebBased ChatKit
-            let webBasedViewController = ChatWebViewController(chatSequence: chatSequence.copy(), theme: shared.theme, webviewURL: webviewURL)
-            UIApplication.shared.topViewController()?.present(isWebMode ? webBasedViewController :chatViewController, animated: true)
+            let webBasedViewController = ChatWebViewController(chatSequence: chatSequence.copy(), theme: shared.theme, webviewURL: shared.webviewURL)
+            if isWebMode {
+                UIApplication.shared.topViewController()?.present(webBasedViewController, animated: true)
+            }else {
+                UIApplication.shared.topViewController()?.present(chatViewController, animated: true)
+            }
+
             GKLogger.shared.log(.module(ChatKit.self), "Presenting chat sequence: \(chatSequence.id) - viewCount: \(currentViewCount) - timesToShow: \(timesToShow)")
         }
     }
