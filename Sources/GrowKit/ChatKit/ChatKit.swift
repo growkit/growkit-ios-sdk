@@ -89,7 +89,7 @@ public class ChatKit: NSObject, GKLibrary {
             let chatViewController = ChatViewController(chatSequence: chatSequence.copy(), theme: shared.theme)
             let webViewModel = ChatKitWebViewModel(url: "http://localhost:8000/chat")
             let webBasedViewController = ChatKitWebViewContainer(webViewModel: webViewModel)
-            UIApplication.shared.topViewController()?.present(chatViewController, animated: true)
+            UIApplication.shared.topViewController()?.present(webBasedViewController, animated: true)
             GKLogger.shared.log(.module(ChatKit.self), "Presenting chat sequence: \(chatSequence.id) - viewCount: \(currentViewCount) - timesToShow: \(timesToShow)")
         }
     }
