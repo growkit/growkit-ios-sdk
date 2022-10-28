@@ -14,17 +14,13 @@ class ChatWebViewController: UIViewController, WKUIDelegate {
 
     var webView: WKWebView!
 
-    let chatSequence: ChatSequence
-    let theme: ChatTheme
+    
     // http://localhost:8000/chat
     // https://growkit.app/chat
     public var webviewURL: String = "https://growkit.app/chat"
-    convenience init(chatSequence: ChatSequence, theme: ChatTheme, webviewURL: String){
-        super.init()
-        self.chatSequence = chatSequence
-        self.theme = theme
-        self.webviewURL = webviewURL
-    }
+    public var chatSequence: ChatSequence
+    public var theme: ChatTheme
+
     override func loadView() {
         let webConfiguration = WKWebViewConfiguration()
         webView = WKWebView(frame: .zero, configuration: webConfiguration)
