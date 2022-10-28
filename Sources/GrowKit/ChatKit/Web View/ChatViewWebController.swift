@@ -24,7 +24,7 @@ class ChatWebViewController: UIViewController, WKUIDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let myURL = URL(string:"https://www.apple.com")
+        let myURL = URL(string:"http://localhost:8000/chat")
         let myRequest = URLRequest(url: myURL!)
         webView.load(myRequest)
     }
