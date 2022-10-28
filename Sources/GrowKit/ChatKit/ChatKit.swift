@@ -18,7 +18,8 @@ public class ChatKit: NSObject, GKLibrary {
     private(set) var chatSequences: [ChatSequence] = []
     private(set) var triggers: [Trigger] = []
     public var theme: ChatTheme = .lightMode
-    
+    public var webviewURL: String = "https://growkit.app/chat"
+    public var isWebMode: Bool = true
     private var json: [String: Any]? {
         return GrowKit.shared.json(for: ChatKit.self)
     }
@@ -87,9 +88,9 @@ public class ChatKit: NSObject, GKLibrary {
             
             ChatKit.shared.registerViewCount(for: chatSequence.id, event: eventName)
             let chatViewController = ChatViewController(chatSequence: chatSequence.copy(), theme: shared.theme)
-//            let webViewModel = ChatKitWebViewModel(url: "http://localhost:8000/chat")
-            let webBasedViewController = ChatWebViewController()
-            UIApplication.shared.topViewController()?.present(webBasedViewController, animated: true)
+            // WebBased ChatKit
+            let webBasedViewController = ChatWebViewController(chatSequence: chatSequence.copy(), theme: shared.theme, webviewURL: webviewURL)
+            UIApplication.shared.topViewController()?.present(isWebMode ? webBasedViewController :chatViewController, animated: true)
             GKLogger.shared.log(.module(ChatKit.self), "Presenting chat sequence: \(chatSequence.id) - viewCount: \(currentViewCount) - timesToShow: \(timesToShow)")
         }
     }
