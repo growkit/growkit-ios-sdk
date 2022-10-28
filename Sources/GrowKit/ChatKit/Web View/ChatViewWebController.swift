@@ -21,13 +21,11 @@ class ChatKitWebViewModel: ObservableObject {
         self.url = url
     }
 }
-
+// self.webView.configuration.userContentController.add(a,name: "observer")
 struct ChatKitWebViewContainer: UIViewRepresentable {
     @ObservedObject var webViewModel: ChatKitWebViewModel
-    var webView:WKWebView
     func makeCoordinator() -> ChatKitWebViewContainer.Coordinator {
-        let a = Coordinator(self, webViewModel)
-       // self.webView.configuration.userContentController.add(a,name: "observer")
+        Coordinator(self, webViewModel)
     }
 
     func makeUIView(context: Context) -> WKWebView {
