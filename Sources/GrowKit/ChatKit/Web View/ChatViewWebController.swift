@@ -27,7 +27,7 @@ struct ChatKitWebViewContainer: UIViewRepresentable {
     var webView:WKWebView
     func makeCoordinator() -> ChatKitWebViewContainer.Coordinator {
         let a = Coordinator(self, webViewModel)
-        self.webView.configuration.userContentController.add(a,name: "observer")
+       // self.webView.configuration.userContentController.add(a,name: "observer")
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -43,7 +43,7 @@ struct ChatKitWebViewContainer: UIViewRepresentable {
         _webView.navigationDelegate = context.coordinator
 
         _webView.load(request)
-        self.webView = _webView
+        //self.webView = _webView
         return _webView
     }
 
