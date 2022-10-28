@@ -37,14 +37,14 @@ struct ChatKitWebViewContainer: UIViewRepresentable {
 
         let request = URLRequest(url: url)
 
-        let webView = WKWebView()
-        webView.isOpaque = false
-        webView.backgroundColor = UIColor(Color("Primary"))
-        webView.navigationDelegate = context.coordinator
+        let _webView = WKWebView()
+        _webView.isOpaque = false
+        _webView.backgroundColor = UIColor(Color("Primary"))
+        _webView.navigationDelegate = context.coordinator
 
-        webView.load(request)
-        self.webView = webView
-        return webView
+        _webView.load(request)
+        self.webView = _webView
+        return _webView
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
