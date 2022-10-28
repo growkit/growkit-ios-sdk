@@ -7,7 +7,7 @@
 
 import UIKit
 import SafariServices
-
+// TO REMOVE AND REPLACE WITH WEBKIT
 public class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate {
 
     let chatSequence: ChatSequence
