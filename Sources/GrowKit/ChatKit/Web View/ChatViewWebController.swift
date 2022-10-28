@@ -24,10 +24,10 @@ class ChatKitWebViewModel: ObservableObject {
 
 struct ChatKitWebViewContainer: UIViewRepresentable {
     @ObservedObject var webViewModel: ChatKitWebViewModel
-
+    webView:WKWebView
     func makeCoordinator() -> ChatKitWebViewContainer.Coordinator {
         let a = Coordinator(self, webViewModel)
-        webView.configuration.userContentController.add(a,name: "observer")
+        self.webView.configuration.userContentController.add(a,name: "observer")
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -43,7 +43,7 @@ struct ChatKitWebViewContainer: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
 
         webView.load(request)
-
+        self.webView = webView
         return webView
     }
 
