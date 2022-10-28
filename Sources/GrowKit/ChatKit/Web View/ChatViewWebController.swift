@@ -20,6 +20,7 @@ class ChatWebViewController: UIViewController, WKUIDelegate {
     // https://growkit.app/chat
     public var webviewURL: String = "https://growkit.app/chat"
     init(chatSequence: ChatSequence, theme: ChatTheme, webviewURL: String){
+        super.init()
         self.chatSequence = chatSequence
         self.theme = theme
         self.webviewURL
@@ -30,7 +31,7 @@ class ChatWebViewController: UIViewController, WKUIDelegate {
         webView.uiDelegate = self
         webView.isOpaque = false
         webView.backgroundColor = UIColor(Color("Primary"))
-        webView.enclosingScrollView?.verticalScroller = false
+        webView.scrollView.showsVerticalScrollIndicator = false
         view = webView
     }
 
