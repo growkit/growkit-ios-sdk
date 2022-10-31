@@ -56,7 +56,7 @@ public struct ChatTextInput: Chat, JSONObject {
     }
     
     var jsonDictionary: [String : Any] {
-        var theJSON: [String: Any] = [
+        let theJSON: [String: Any] = [
             "type": "chatTextInput",
             "id": id,
             "message": message,

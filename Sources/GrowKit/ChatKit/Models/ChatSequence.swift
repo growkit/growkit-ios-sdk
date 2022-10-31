@@ -80,11 +80,11 @@ public class ChatSequence {
     
     func start() {
         GKLogger.shared.log(.module(ChatKit.self), "Starting chat sequence: \(id)")
-        continueChat()
-        startTime = Date()
-        
         let event = ChatAnalyticEvent.started(self)
         GrowKit.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
+        
+        continueChat()
+        startTime = Date()
     }
     
     func stop() {
@@ -115,11 +115,7 @@ public class ChatSequence {
                 self.chats = self.levels.removeLast()
                 self.continueChat()
             } else {
-                GKLogger.shared.log(.module(ChatKit.self), "Complete chat sequence: \(id)")
-                let elapsedTime = Date().timeIntervalSince1970 - startTime.timeIntervalSince1970
-
-                let event = ChatAnalyticEvent.finished(self, elapsedTime)
-                GrowKit.shared.delegate?.logAnalyticEvent(library: ChatKit.self, event: event.eventName, parameters: event.parameters)
+                self.dismissed()
             }
             return
         }

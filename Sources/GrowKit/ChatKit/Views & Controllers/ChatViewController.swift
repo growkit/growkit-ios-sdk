@@ -43,6 +43,7 @@ public class ChatViewController: UIViewController, UITableViewDataSource, UITabl
     
     @IBAction func cancelButtonPressed(_ sender: Any) {
         dismiss(animated: true)
+        chatSequence.dismissed()
     }
     
     public init(chatSequence: ChatSequence, theme: ChatTheme) {
@@ -107,14 +108,14 @@ public class ChatViewController: UIViewController, UITableViewDataSource, UITabl
     public override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         self.chatSequence.stop()
-        self.chatSequence.dismissed()
     }
     
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if chatSequence.isStopped {
             chatSequence.isStopped = false
-            chatSequence.continueChat()
+            if let currentChat = currentChat, currentChat.type == .chatQuestion || currentChat.type == .chatTextInput {
+            } else { chatSequence.continueChat() }
         }
     }
     

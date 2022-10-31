@@ -88,7 +88,7 @@ class FormViewController: UITableViewController {
             cell.titleLabel.font = formItem.font
             return cell
             
-        } else if var textInputFormItem = formItem as? TextInputFormItem {
+        } else if let textInputFormItem = formItem as? TextInputFormItem {
             
             if textInputFormItem.multiLine {
                 // Multi-line text
