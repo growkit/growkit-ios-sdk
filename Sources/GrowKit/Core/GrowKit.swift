@@ -108,7 +108,7 @@ public class GrowKit {
     
     // MARK: - Triggers
     
-    public func logEvent(eventName: String, properties: [String: Any]) {
+    public func createTriggerEvent(eventName: String, properties: [String: Any]) {
         libraries.forEach({
             $0.handleEvent(eventName: eventName, properties: properties)
         })

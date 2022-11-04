@@ -64,9 +64,9 @@ extension ChatWebViewController: WKScriptMessageHandler{
         hapticFeedback()
         do {
             print(dict["message"])
-        }catch {
+        } catch {
+            
         }
-
     }
 
     private func hapticFeedback() {

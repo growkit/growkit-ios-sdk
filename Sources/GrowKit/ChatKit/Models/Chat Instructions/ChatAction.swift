@@ -7,6 +7,8 @@
 
 import UIKit
 
+
+
 public enum ChatAction {
     case purchaseProduct(String)
     case restorePurchases
@@ -21,6 +23,11 @@ public enum ChatAction {
     case rainingEmojis(String)
     case loopStart(String)
     case loopEnd(String)
+    
+    // case inputImage
+    // case inputText
+    // case uploadFile
+    
     // webhook
     
     var loopID: String? {
