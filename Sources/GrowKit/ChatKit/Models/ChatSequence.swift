@@ -44,7 +44,6 @@ public class ChatSequence {
         self.allChats = chats
         self.name = id
         
-        GrowKit.shared.confirmAccessToProject(library: ChatKit.self)
         ChatKit.shared.registerChatSequence(sequence: self)
     }
     

@@ -29,15 +29,22 @@ public class GrowKit {
     public weak var delegate: GKDelegate?
     
     private static let _shared: GrowKit = GrowKit()
-    
-    // Build added so that cached libraries are reset on every new build (if a user decided to remove libraries)
- 
+     
     private var sdkResponse: SDKResponse?
     private var sdkRequest: GKRequest<SDKResponse>?
     private var json: [String: Any]?
     private var didCallConfigure: Bool = false
     private var libraries: [GKLibrary.Type] = []
     public var appID: String?
+    
+    public var theme: ChatTheme {
+        set {
+            ChatKit.shared.theme = newValue
+        }
+        get {
+            return ChatKit.shared.theme
+        }
+    }
     
     private init() {
         NotificationCenter.default.addObserver(forName: UIApplication.didFinishLaunchingNotification, object: nil, queue: .main) { _ in
@@ -60,7 +67,7 @@ public class GrowKit {
         GKLogger.shared.log(.growthkit, "LIBRARIES: \(_shared.libraries.map({ $0.id }))")
     }
     
-    public func start() {
+    private func start() {
         makeLibraryRequest()
     }
     
@@ -68,42 +75,8 @@ public class GrowKit {
         makeLibraryRequest(completion: completion)
     }
     
-    // MARK: - Confirm Access
-    
-    @discardableResult
-    public func confirmAccessToProject(library: GKLibrary.Type, crashOnNo: Bool = false) -> Bool {
-        guard libraries.contains(where: { $0.id == library.id }) else {
-            fatalError("You are using a library (\(library.name) - \(library.id))) that you did not configure on app open. Please update your configure to include `\(library.self).self` in your GitMart.configure() call like so: `GitMart.configure([ChatKit.self])`.")
-        }
-        
-        if sdkResponse == nil {
-            return true
-        }
-        
-        guard let library = sdkResponse?.libraries.filter({ $0.id == library.id }).first else {
-            return true
-        }
-        
-        if library.isBillingError {
-            GKLogger.shared.log(.growthkit, "Warning - you are currently in billing error with the library \(library.name)<\(library.id)>. Please visit your GitMart dashboard to resolve this error and ensure there is no interruption in service. We are still permitting access currently.")
-            return true
-        }
-        
-        
-        if library.isTrial {
-            GKLogger.shared.log(.growthkit, "You are using \(library.name)<\(library.id)> in trial mode right now. You can use it \(library.usageLeft) more times before your access will be expired. Please purchase this library on GitMart at https://gitmart.co/library/\(library.id) to continue using it. Shipping a library in trial mode to production is against our Terms of Service and the license for an individual library and can result in legal action.")
-        }
-        
-        guard library.isPurchased else {
-            if crashOnNo {
-                fatalError("You are attempting to use a GitMart library that you haven't paid for: \(library.name)<\(library.id)>. Please visit your GitMart account to update your billing information.")
-            } else {
-                GKLogger.shared.log(.growthkit, "You are attempting to use a GitMart library that you haven't paid for: \(library.name)<\(library.id)>. Please visit your GitMart account to update your billing information. Eventually, we will start blocking your access but we are allowing you to continue using it now as a courtesy.")
-                return false
-            }
-        }
-        
-        return true
+    public func showDebugger(on controller: UIViewController) {
+        ChatKit.shared.showBuilder(on: controller)
     }
     
     // MARK: - Triggers
@@ -141,7 +114,6 @@ public class GrowKit {
                 "ios_app_user_id": C.UserID(),
                 "ios_sdk_version": GrowKit.version,
             ],
-            "libraries": libraries.map({ ["id": $0.id, "version": $0.version, "bundle_id": $0.bundleID] }),
             "events": GKEvents.loggedEvents(),
         ]
         request.onResponse = { (res: SDKResponse) in

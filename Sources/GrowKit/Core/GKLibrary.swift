@@ -10,7 +10,6 @@ import Foundation
 public protocol GKLibrary {
     static var id: String { get }
     static var name: String { get }
-    static var version: String { get }
     static var bundleID: String { get }
     
     static func start()

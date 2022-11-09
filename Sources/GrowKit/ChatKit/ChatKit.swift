@@ -8,23 +8,22 @@
 import UIKit
 import NotificationCenter
 
-public class ChatKit: NSObject, GKLibrary {
-    public static let id = "632b6c551015bcf8ac4843d9"
-    public static let name = "ChatKit"
-    public static let shared: ChatKit = ChatKit()
-    public static let version: String = "0.2.0"
-    public static let bundleID: String = "chat-kit"
+class ChatKit: NSObject, GKLibrary {
+    static let id = "632b6c551015bcf8ac4843d9"
+    static let name = "ChatKit"
+    static let shared: ChatKit = ChatKit()
+    static let bundleID: String = "chat-kit"
     
     private(set) var chatSequences: [ChatSequence] = []
     private(set) var triggers: [Trigger] = []
-    public var theme: ChatTheme = .lightMode
+    var theme: ChatTheme = .lightMode
     
     private var json: [String: Any]? {
         return GrowKit.shared.json(for: ChatKit.self)
     }
     
     // Automatically called on GrowKit init
-    public static func start() {
+    static func start() {
         NotificationCenter.default.addObserver(ChatKit.shared, selector: #selector(ChatKit.shared.applicationDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(ChatKit.shared, selector: #selector(ChatKit.shared.applicationDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
         
@@ -50,7 +49,7 @@ public class ChatKit: NSObject, GKLibrary {
         }
     }
     
-    public func showBuilder(on controller: UIViewController) {
+    func showBuilder(on controller: UIViewController) {
         let sequencesViewController = SequencesViewController(chatSequences: chatSequences)
         let navigationController = UINavigationController(rootViewController: sequencesViewController)
         navigationController.modalPresentationStyle = .fullScreen
