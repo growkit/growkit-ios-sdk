@@ -17,7 +17,7 @@ extension UITextView {
     }
 
     /// The UITextView placeholder text
-    public var placeholder: String? {
+    internal var placeholder: String? {
         get {
             var placeholderText: String?
 
@@ -40,7 +40,7 @@ extension UITextView {
     /// When the UITextView did change, show or hide the label based on if the UITextView is empty or not
     ///
     /// - Parameter textView: The UITextView that got updated
-    public func textViewDidChange(_ textView: UITextView) {
+    func textViewDidChange(_ textView: UITextView) {
         if let placeholderLabel = self.viewWithTag(100) as? UILabel {
             placeholderLabel.isHidden = self.text.count > 0
         }
