@@ -27,9 +27,6 @@ class ChatKit: NSObject, GKLibrary {
         NotificationCenter.default.addObserver(ChatKit.shared, selector: #selector(ChatKit.shared.applicationDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(ChatKit.shared, selector: #selector(ChatKit.shared.applicationDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
         
-        // Note - if the user overwrites this, we won't receive local notification things
-        UNUserNotificationCenter.current().delegate = ChatKit.shared
-        
         // Look into this
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [
             
